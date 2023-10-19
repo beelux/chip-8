@@ -11,10 +11,10 @@ import engine.graphics.{Color, Point, Rectangle}
 import processing.core.{PApplet, PConstants}
 import processing.event.KeyEvent
 import tetris.logic._
-import tetris.game.TetrisGame._
+import tetris.game.ChipVM._
 import tetris.logic.{Point => GridPoint}
 
-class TetrisGame extends GameBase {
+class ChipVM extends GameBase {
 
   var gameLogic : TetrisLogic = TetrisLogic()
   val updateTimer = new UpdateTimer(TetrisLogic.FramesPerSecond.toFloat)
@@ -115,14 +115,14 @@ class TetrisGame extends GameBase {
     }
 }
 
-object TetrisGame {
+object ChipVM {
 
 
   val WidthCellInPixels: Double = 15 * TetrisLogic.DrawSizeFactor
   val HeightCellInPixels: Double = WidthCellInPixels
 
   def main(args:Array[String]): Unit = {
-    PApplet.main("tetris.game.TetrisGame")
+    PApplet.main("tetris.game.ChipVM")
   }
 
 }
