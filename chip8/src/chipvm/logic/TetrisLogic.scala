@@ -1,12 +1,12 @@
-package tetris.logic
+package chipvm.logic
 
 import engine.random.{RandomGenerator, ScalaRandomGen}
-import tetris.logic.TetrisLogic._
+import chipvm.logic.TetrisLogic._
 
 /** To implement Tetris, complete the ``TODOs`` below.
  *
  * If you need additional files,
- * please also put them in the ``tetris`` package.
+ * please also put them in the ``chipvm`` package.
  */
 class TetrisLogic(val randomGen: RandomGenerator,
                   val gridDims : Dimensions,

@@ -1,4 +1,4 @@
-package tetris.logic
+package chipvm.logic
 
 // you can alter this file!
 

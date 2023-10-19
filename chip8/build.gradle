@@ -7,7 +7,7 @@ plugins {
 
 
 application {
-    mainClass.set('tetris.game.ChipVM')
+    mainClass.set('chipvm.game.ChipVM')
 }
 
 
@@ -59,7 +59,7 @@ task zip(type: Zip) {
     dependsOn assemble
 
     from fileTree(dir: '.')
-    include 'src/tetris/logic/**.scala'
+    include 'src/chipvm/logic/**.scala'
 
     archiveFileName = 'chip8.zip'
     destinationDirectory = layout.buildDirectory.dir("$projectDir")

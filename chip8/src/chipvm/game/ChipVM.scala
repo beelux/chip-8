@@ -1,7 +1,7 @@
 // DO NOT MODIFY FOR BASIC SUBMISSION
 // scalastyle:off
 
-package tetris.game
+package chipvm.game
 
 import java.awt.event
 import java.awt.event.KeyEvent._
@@ -10,9 +10,9 @@ import engine.GameBase
 import engine.graphics.{Color, Point, Rectangle}
 import processing.core.{PApplet, PConstants}
 import processing.event.KeyEvent
-import tetris.logic._
-import tetris.game.ChipVM._
-import tetris.logic.{Point => GridPoint}
+import chipvm.logic._
+import chipvm.game.ChipVM._
+import chipvm.logic.{Point => GridPoint}
 
 class ChipVM extends GameBase {
 
@@ -122,7 +122,7 @@ object ChipVM {
   val HeightCellInPixels: Double = WidthCellInPixels
 
   def main(args:Array[String]): Unit = {
-    PApplet.main("tetris.game.ChipVM")
+    PApplet.main("chipvm.game.ChipVM")
   }
 
 }

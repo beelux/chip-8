@@ -1,4 +1,4 @@
-package tetris.logic
+package chipvm.logic
 
 abstract class CellType
 case object ICell  extends CellType

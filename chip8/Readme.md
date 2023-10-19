@@ -20,16 +20,16 @@ readable as possible. If your implementation is more than 450 lines long (includ
 ## Framework
 
 The framework is highly similar to the snake framework.
-Code to draw the game state and handle keyboard events has already been provided in `src/tetris/game/TetrisGame.scala`,
+Code to draw the game state and handle keyboard events has already been provided in `src/chipvm/game/TetrisGame.scala`,
 where you can also run the game (press the play button). You only have to implement the game logic. Your implementation
-should go in `src/tetris/logic/TetrisLogic.scala` . If you want to add additional files, please make certain to
-keep them in the `src.tetris.logic` package (that is the directory `src/tetris/logic`).
+should go in `src/chipvm/logic/TetrisLogic.scala` . If you want to add additional files, please make certain to
+keep them in the `src.chipvm.logic` package (that is the directory `src/chipvm/logic`).
 
 
 The drawing and event code, `TetrisGame` interacts with the game logic `TetrisLogic` as follows:
 
 * When drawing the game, `TetrisGame` asks `TetrisLogic` for each cell in the grid what the type is. The cell types are
-defined `tetris.logic.CellType` and are either `Empty` or an `<X>Cell` where X is the letter corresponding to the tetromino
+defined `chipvm.logic.CellType` and are either `Empty` or an `<X>Cell` where X is the letter corresponding to the tetromino
 that the block originated from. See below for a list of tetrominos. The drawing code
 also calls `gameOver` and draws a game over text if this is true.
 * When the user pressed the left, right or down arrow key, then `moveLeft`, `moveRight` or `moveDown` is called
@@ -96,15 +96,15 @@ This class should have three subclasses, each implementing a different rotation 
 
 ## Assignments
 
-There are 2 assignments for tetris:
+There are 2 assignments for chipvm:
 ### 3.1 Basic Tetris
 
-Implement the basics of tetris: piece rotation and movement.
+Implement the basics of chipvm: piece rotation and movement.
 This assignment is pass/fail. To pass this assignment, you need to pass 17 tests from `TetrisTestSuite3_1`.
 
 ### 3.2 Tetris
 
-Implement full tetris. Tests can be found in `TetrisTestSuite3_2`
+Implement full chipvm. Tests can be found in `TetrisTestSuite3_2`
 
 Grading is built up as follows:
 
