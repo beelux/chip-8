@@ -44,6 +44,11 @@ object ChipVMLogic {
 
   val DrawSizeFactor = 1.0 // increase this to make the game bigger
 
+  /** Makes empty board
+   * It is a 2D array for performance reasons (O(1) access time)
+   * -> performance is important, as we do 700 instructions per second
+   * @return
+   */
   def makeEmptyBoard: Array[Array[CellType]] = {
     val emptyColumn : Array[CellType] = Array.fill(Height)(Empty)
     Array.fill(Width)(emptyColumn.clone())
