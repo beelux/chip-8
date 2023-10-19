@@ -1,0 +1,99 @@
+
+plugins {
+    id 'scala'
+    id 'idea'
+    id 'application'
+}
+
+
+application {
+    mainClass.set('tetris.game.TetrisGame')
+}
+
+
+
+test {
+    useJUnitPlatform()
+    afterSuite { suite, result ->
+        result.exception?.printStackTrace()
+    }
+}
+
+ext {
+    scalaMajorVersion = '2.13'
+    scalaVersion = '2.13.11'
+}
+
+
+repositories {
+    flatDir {
+        dirs 'lib'
+    }
+
+    mavenCentral()
+}
+
+sourceSets.main.scala.srcDirs = ['src']
+sourceSets.test.scala.srcDirs = ['test']
+
+dependencies {
+    implementation "org.scala-lang:scala-library:${scalaVersion}"
+    implementation fileTree(include: ['*.jar'], dir: 'lib')
+    testImplementation('junit:junit:4.13.2')
+    testImplementation("org.scala-lang:scala-reflect") {
+      version {
+          strictly '2.13.11'
+      }
+    }
+    testImplementation('org.junit.vintage:junit-vintage-engine:5.9.0')
+    testImplementation("org.scalatest:scalatest_${scalaMajorVersion}:3.0.9")
+}
+
+
+task zip(type: Zip) {
+    group = "prepareZipForSubmit"
+    description = "Zip your code for submission to Codegrade"
+
+    // To make sure you can always run this task
+    outputs.upToDateWhen { false }
+    dependsOn assemble
+
+    from fileTree(dir: '.')
+    include 'src/tetris/logic/**.scala'
+
+    archiveFileName = 'tetris.zip'
+    destinationDirectory = layout.buildDirectory.dir("$projectDir")
+}
+
+
+task test3_1(type: Test) {
+    description="Run tests for assignment 3.1 (tetris)"
+    filter {
+        includeTestsMatching "tetris.TetrisTestSuite3_1"
+    }
+}
+
+task test3_2(type: Test) {
+    description="Run tests for assignment 3.2 (tetris)"
+    filter {
+        includeTestsMatching "tetris.TetrisTestSuite3_2"
+    }
+}
+
+task fraction3_1(type: JavaExec, dependsOn: classes) {
+    // To make sure you can always run this task
+    outputs.upToDateWhen { false }
+    mainClass.set('infrastructure.ReportFraction3_1')
+    classpath sourceSets.test.runtimeClasspath
+    classpath sourceSets.main.runtimeClasspath
+    //classpath configurations.runtime
+}
+
+task fraction3_2(type: JavaExec, dependsOn: classes) {
+    // To make sure you can always run this task
+    outputs.upToDateWhen { false }
+    mainClass.set('infrastructure.ReportFraction3_2')
+    classpath sourceSets.test.runtimeClasspath
+    classpath sourceSets.main.runtimeClasspath
+    //classpath configurations.runtime
+}
