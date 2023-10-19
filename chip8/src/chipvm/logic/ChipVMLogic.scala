@@ -3,6 +3,8 @@ package chipvm.logic
 import engine.random.{RandomGenerator, ScalaRandomGen}
 import chipvm.logic.ChipVMLogic._
 
+import java.awt.event.KeyEvent._
+
 class ChipVMLogic(val randomGen: RandomGenerator,
                   val board: Array[Array[CellType]]) {
 
@@ -11,12 +13,34 @@ class ChipVMLogic(val randomGen: RandomGenerator,
 
   def moveDown(): Unit = ()
 
+  def keyPressed(keyCode : Int): Unit = {
+    keyCode match {
+      case VK_1 => println("1")
+      case VK_2 => println("2")
+      case VK_3 => println("3")
+      case VK_4 => println("4")
+      case VK_Q => println("Q")
+      case VK_W => println("W")
+      case VK_E => println("E")
+      case VK_R => println("R")
+      case VK_A => println("A")
+      case VK_S => println("S")
+      case VK_D => println("D")
+      case VK_F => println("F")
+      case VK_Z => println("Z")
+      case VK_X => println("X")
+      case VK_C => println("C")
+      case VK_V => println("V")
+      case _ => ()
+    }
+  }
+
   def getCellType(p : Point): CellType = board(p.x)(p.y)
 }
 
 object ChipVMLogic {
 
-  val FramesPerSecond: Int = 60
+  val InstructionsPerSecond: Int = 700
 
   val DrawSizeFactor = 1.0 // increase this to make the game bigger
 

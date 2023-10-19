@@ -14,7 +14,7 @@ import chipvm.logic.{Point => GridPoint}
 
 class ChipVM extends GameBase {
   var gameLogic : ChipVMLogic = ChipVMLogic()
-  val updateTimer = new UpdateTimer(ChipVMLogic.FramesPerSecond.toFloat)
+  val updateTimer = new UpdateTimer(ChipVMLogic.InstructionsPerSecond.toFloat)
   val gridDims : Dimensions = ChipVMLogic.DefaultDims
   val widthInPixels: Int = (WidthCellInPixels * gridDims.width).ceil.toInt
   val heightInPixels: Int = (HeightCellInPixels * gridDims.height).ceil.toInt
@@ -52,25 +52,7 @@ class ChipVM extends GameBase {
   }
 
   override def keyPressed(event: KeyEvent): Unit = {
-    event.getKeyCode match {
-      case VK_1   => println("1")
-      case VK_2   => println("2")
-      case VK_3   => println("3")
-      case VK_4   => println("4")
-      case VK_Q   => println("Q")
-      case VK_W   => println("W")
-      case VK_E   => println("E")
-      case VK_R   => println("R")
-      case VK_A   => println("A")
-      case VK_S   => println("S")
-      case VK_D   => println("D")
-      case VK_F   => println("F")
-      case VK_Z   => println("Z")
-      case VK_X   => println("X")
-      case VK_C   => println("C")
-      case VK_V   => println("V")
-      case _      => ()
-    }
+    gameLogic.keyPressed(event.getKeyCode)
   }
 
   override def settings(): Unit = {
