@@ -53,10 +53,31 @@ class ChipVMLogic(val memory: Array[Byte], // 4 kilobytes, 4096 bytes of memory
    * Fetch / decode / execute loop
    *
    * Do not update the display unless necessary
+   *
    * @return Boolean state: should the display be updated?
    */
-  def loop: Boolean = {
-    ???
+  def loop(): Boolean = {
+    val instruction = (memory(pc), memory(pc + 1))
+    val nibbles = ( (memory(pc) & 0xF0) >> 4,
+                    (memory(pc) & 0x0F),
+                    (memory(pc + 1) & 0xF0) >> 4,
+                    (memory(pc + 1) & 0x0F))
+
+    pc = (pc + 2).toShort
+
+    nibbles._1 match {
+      case 0x0 => print("")
+      case 0x1 => print("")
+      case 0x6 => print("")
+      case 0x7 => print("")
+      case 0xA => print("")
+      case 0xD => print("")
+    }
+
+    // You cannot directly compare Byte to HEX, because Java Bytes are also "signed"
+    // 0xaf == 175
+    // 0xaf.toByte == -81
+    (instruction._1 == 0x0.toByte && instruction._2 == 0xe0.toByte) || nibbles._1 == 0xD.toByte
   }
 
   def getCellType(p: Point): CellType = display(p.x)(p.y)
@@ -84,7 +105,7 @@ object ChipVMLogic {
     ArraySeq[Byte](0xF0.toByte, 0x80.toByte, 0x80.toByte, 0x80.toByte, 0xF0.toByte), // C
     ArraySeq[Byte](0xE0.toByte, 0x90.toByte, 0x90.toByte, 0x90.toByte, 0xE0.toByte), // D
     ArraySeq[Byte](0xF0.toByte, 0x80.toByte, 0xF0.toByte, 0x80.toByte, 0xF0.toByte), // E
-    ArraySeq[Byte](0xF0.toByte, 0x80.toByte, 0xF0.toByte, 0x80.toByte, 0x80.toByte)  // F
+    ArraySeq[Byte](0xF0.toByte, 0x80.toByte, 0xF0.toByte, 0x80.toByte, 0x80.toByte) // F
   )
 
   val DrawSizeFactor = 1.0 // increase this to make the game bigger

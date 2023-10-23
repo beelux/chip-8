@@ -70,7 +70,7 @@ class ChipVM extends GameBase {
 
   def updateState(): Unit = {
     if (instructionTimer.timeForNextFrame()) {
-      gameLogic.moveDown()
+      val result = gameLogic.loop
       instructionTimer.advanceFrame()
     }
   }
