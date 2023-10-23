@@ -9,7 +9,7 @@ import java.awt.event.KeyEvent._
 import scala.io.Source
 
 class ChipVMLogic(val memory: Array[Byte], // 4 kilobytes, 4096 bytes of memory
-                  val display: Array[Array[CellType]], // 64x32 display
+                  var display: Array[Array[CellType]], // 64x32 display
                   var pc: Short, // 12-bit (max 4096)
                   var i: Short, // index register
                   val stack: Stack[Short], // stack of 16-bit addresses
@@ -17,6 +17,10 @@ class ChipVMLogic(val memory: Array[Byte], // 4 kilobytes, 4096 bytes of memory
                   var soundTimer: Byte, // same, but BEEP as long as not 0
                   val variableRegisters: Array[Byte] // 16 8-bit registers (0-F / 0-15)
                  ) {
+
+  def copy(display: Array[Array[CellType]]) =
+    new ChipVMLogic(memory, display, pc, i, stack, delayTimer, soundTimer, variableRegisters)
+
   def moveDown(): Unit = ()
 
   def keyPressed(keyCode: Int): Unit = {
@@ -65,20 +69,75 @@ class ChipVMLogic(val memory: Array[Byte], // 4 kilobytes, 4096 bytes of memory
 
     pc = (pc + 2).toShort
 
-    nibbles._1 match {
-      case 0x0 => print("")
-      case 0x1 => print("")
-      case 0x6 => print("")
-      case 0x7 => print("")
-      case 0xA => print("")
-      case 0xD => print("")
+    nibbles._1.toByte match {
+      case 0x0 => nibbles._2.toByte match {
+        case 0x0 => nibbles._3.toByte match {
+          case 0xE => nibbles._4.toByte match {
+            case 0x0 => cls()
+            case 0xE => ret()
+            case _ => print("unknown instruction")
+          }
+          case _ => print("unknown instruction")
+        }
+        case _ => print("unknown instruction")
+      }
+      case 0x1 =>
+        pc = ((nibbles._2 << 8) + instruction._2).toShort
+      case 0x6 =>
+        val register = nibbles._2.toByte
+        val value = instruction._2.toByte
+
+        variableRegisters(register) = value
+      case 0x7 => print("7")
+      case 0xA =>
+        i = ((nibbles._2 << 8) + instruction._2).toShort
+      case 0xD => {
+        val x = variableRegisters(nibbles._2.toByte) % 64
+        val y = variableRegisters(nibbles._3.toByte) % 32
+        val height = nibbles._4.toByte
+        val data = memory.slice(i, i + height)
+
+        variableRegisters(15) = {
+          data.zipWithIndex.foldLeft(0.toByte)( (acc, byte) => {
+            val line = byte._1.toBinaryString.map[Boolean] {
+              case '1' => true
+              case '0' => false
+            }
+
+            val curY = y + byte._2
+
+            if(curY < 32) {
+              line.zipWithIndex.foldLeft(acc)((acc, bit) => {
+                val curX = x + bit._2
+
+                if (bit._1 && curX < 64) {
+                  val flipped = display(curX)(curY).flipped
+                  display(curX)(curY) = flipped
+                  if (flipped == Empty) {
+                    1.toByte
+                  } else acc
+                } else acc
+              })
+            } else acc
+          })
+        }
+      }
     }
+
 
     // You cannot directly compare Byte to HEX, because Java Bytes are also "signed"
     // 0xaf == 175
     // 0xaf.toByte == -81
     // https://stackoverflow.com/a/22278028
     (instruction._1 == 0x0.toByte && instruction._2 == 0xe0.toByte) || nibbles._1 == 0xD.toByte
+  }
+
+  def cls(): Unit = {
+    display = makeEmptyBoard
+  }
+
+  def ret(): Unit = {
+    // TODO
   }
 
   def getCellType(p: Point): CellType = display(p.x)(p.y)
@@ -126,5 +185,5 @@ object ChipVMLogic {
   val Height: Int = 32
   val DefaultDims: Dimensions = Dimensions(width = Width, height = Height)
 
-  def apply() = new ChipVMLogic(new Array[Byte](4096), makeEmptyBoard, 512, 0, Stack[Short](), 0, 0, Array[Byte](16))
+  def apply() = new ChipVMLogic(new Array[Byte](4096), makeEmptyBoard, 512, 0, Stack[Short](), 0, 0, new Array[Byte](16))
 }
