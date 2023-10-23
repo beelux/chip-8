@@ -14,7 +14,8 @@ import chipvm.logic.{Point => GridPoint}
 
 class ChipVM extends GameBase {
   var gameLogic : ChipVMLogic = ChipVMLogic()
-  val updateTimer = new UpdateTimer(ChipVMLogic.InstructionsPerSecond.toFloat)
+  val instructionTimer = new UpdateTimer(ChipVMLogic.InstructionsPerSecond.toFloat)
+  val timerTimer = new UpdateTimer(ChipVMLogic.timerFrequency.toFloat)
   val gridDims : Dimensions = ChipVMLogic.DefaultDims
   val widthInPixels: Int = (WidthCellInPixels * gridDims.width).ceil.toInt
   val heightInPixels: Int = (HeightCellInPixels * gridDims.height).ceil.toInt
@@ -61,13 +62,16 @@ class ChipVM extends GameBase {
   }
 
   override def setup(): Unit = {
-    updateTimer.init()
+    gameLogic.readROM("roms/1-chip8-logo.ch8")
+
+    instructionTimer.init()
+    timerTimer.init()
   }
 
   def updateState(): Unit = {
-    if (updateTimer.timeForNextFrame()) {
+    if (instructionTimer.timeForNextFrame()) {
       gameLogic.moveDown()
-      updateTimer.advanceFrame()
+      instructionTimer.advanceFrame()
     }
   }
 }

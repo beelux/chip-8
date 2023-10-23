@@ -2,21 +2,21 @@ package chipvm.logic
 
 import engine.random.{RandomGenerator, ScalaRandomGen}
 import chipvm.logic.ChipVMLogic._
+
 import scala.collection.mutable.Stack
 import scala.collection.immutable.ArraySeq
-
 import java.awt.event.KeyEvent._
+import scala.io.Source
 
 class ChipVMLogic(val memory: Array[Byte], // 4 kilobytes, 4096 bytes of memory
                   val display: Array[Array[CellType]], // 64x32 display
-                  val pc: Short, // 12-bit (max 4096)
-                  val i: Short, // index register
+                  var pc: Short, // 12-bit (max 4096)
+                  var i: Short, // index register
                   val stack: Stack[Short], // stack of 16-bit addresses
-                  val delayTimer: Byte, // 8-bit timer, decreased at 60 times per second
-                  val soundTimer: Byte, // same, but BEEP as long as not 0
+                  var delayTimer: Byte, // 8-bit timer, decreased at 60 times per second
+                  var soundTimer: Byte, // same, but BEEP as long as not 0
                   val variableRegisters: Array[Byte] // 16 8-bit registers (0-F / 0-15)
                  ) {
-
   def moveDown(): Unit = ()
 
   def keyPressed(keyCode: Int): Unit = {
@@ -41,14 +41,22 @@ class ChipVMLogic(val memory: Array[Byte], // 4 kilobytes, 4096 bytes of memory
     }
   }
 
+  def readROM(filePath: String): Unit = {
+    val file = Source.fromFile(filePath)
+
+    // Copy contents of file to memory
+    //file.copyToArray(memory, 0, 4096)
+
+    file.close()
+  }
+
   /**
-   * Executes one instruction
+   * Fetch / decode / execute loop
    *
    * Do not update the display unless necessary
-   *
    * @return Boolean state: should the display be updated?
    */
-  def executeInstruction: Boolean = {
+  def loop: Boolean = {
     ???
   }
 
