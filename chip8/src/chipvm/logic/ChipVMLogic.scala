@@ -77,6 +77,7 @@ class ChipVMLogic(val memory: Array[Byte], // 4 kilobytes, 4096 bytes of memory
     // You cannot directly compare Byte to HEX, because Java Bytes are also "signed"
     // 0xaf == 175
     // 0xaf.toByte == -81
+    // https://stackoverflow.com/a/22278028
     (instruction._1 == 0x0.toByte && instruction._2 == 0xe0.toByte) || nibbles._1 == 0xD.toByte
   }
 
