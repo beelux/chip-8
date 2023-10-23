@@ -42,10 +42,9 @@ class ChipVMLogic(val memory: Array[Byte], // 4 kilobytes, 4096 bytes of memory
   }
 
   def readROM(filePath: String): Unit = {
-    val file = Source.fromFile(filePath)
+    val file = Source.fromFile(filePath, "ISO8859-1")
 
-    // Copy contents of file to memory
-    //file.copyToArray(memory, 0, 4096)
+    file.map(_.toByte).copyToArray(memory, 0, 4096)
 
     file.close()
   }
