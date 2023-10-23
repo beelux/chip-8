@@ -44,7 +44,7 @@ class ChipVMLogic(val memory: Array[Byte], // 4 kilobytes, 4096 bytes of memory
   def readROM(filePath: String): Unit = {
     val file = Source.fromFile(filePath, "ISO8859-1")
 
-    file.map(_.toByte).copyToArray(memory, 0, 4096)
+    file.map(_.toByte).copyToArray(memory, 512, 3584)
 
     file.close()
   }
@@ -104,5 +104,5 @@ object ChipVMLogic {
   val Height: Int = 32
   val DefaultDims: Dimensions = Dimensions(width = Width, height = Height)
 
-  def apply() = new ChipVMLogic(new Array[Byte](4096), makeEmptyBoard, 0, 0, Stack[Short](), 0, 0, Array[Byte](16))
+  def apply() = new ChipVMLogic(new Array[Byte](4096), makeEmptyBoard, 512, 0, Stack[Short](), 0, 0, Array[Byte](16))
 }
