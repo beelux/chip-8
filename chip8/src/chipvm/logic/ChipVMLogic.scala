@@ -87,32 +87,11 @@ class ChipVMLogic(val memory: Array[Byte], // 4 kilobytes, 4096 bytes of memory
       case 0x7 => print("7")
       case 0xA =>
         i = ((fixSigned(nibbles._2) << 8) + fixSigned(instruction._2)).toShort
-      case 0xD => {
+      case 0xD =>
         val x = variableRegisters(nibbles._2.toByte) % 64
         val y = variableRegisters(nibbles._3.toByte) % 32
         val height = nibbles._4.toByte
-        val data = memory.slice(i, i + height)
-
-        val newDisplay = {data.zipWithIndex.foldLeft(display)( (acc, byte) => {
-            val line = byteToBool(byte._1)
-
-            val curY = y + byte._2
-
-            if(curY < 32) {
-              line.zipWithIndex.foldLeft(acc)((acc, bit) => {
-                val curX = x + bit._2
-
-                if (bit._1 && curX < 64) {
-                  acc.flip(curX, curY)
-                } else acc
-              })
-            } else acc
-          })
-        }
-
-        variableRegisters(15) = if(display.collision) 1.toByte else 0.toByte
-        display = newDisplay.clearCollision()
-      }
+        draw(x, y, height)
     }
 
 
@@ -123,15 +102,6 @@ class ChipVMLogic(val memory: Array[Byte], // 4 kilobytes, 4096 bytes of memory
     (instruction._1 == 0x0.toByte && instruction._2 == 0xe0.toByte) || nibbles._1 == 0xD.toByte
   }
 
-  def byteToBool(input: Int) = {
-    val byte = fixSigned(input)
-    (0 until 8).foldLeft(new Array[Boolean](8))( (acc, el) => {
-      acc(el) = ((byte >> el) & 1) != 0
-      acc
-    }).toSeq.reverse
-  }
-  def fixSigned(byte: Int) : Int = byte & 255
-
   def cls(): Unit = {
     display = display.clear()
   }
@@ -140,8 +110,39 @@ class ChipVMLogic(val memory: Array[Byte], // 4 kilobytes, 4096 bytes of memory
     // TODO
   }
 
-  def getCellType(p: Point): CellType =
-    display.at(p)
+  def draw(x: Int, y: Int, height: Byte): Unit = {
+    val data = memory.slice(i, i + height)
+
+    val newDisplay = {
+      data.zipWithIndex.foldLeft(display)((acc, byte) => {
+        val line = byteToBool(byte._1)
+
+        val curY = y + byte._2
+
+        if (curY < 32) {
+          line.zipWithIndex.foldLeft(acc)((acc, bit) => {
+            val curX = x + bit._2
+
+            if (bit._1 && curX < 64) {
+              acc.flip(curX, curY)
+            } else acc
+          })
+        } else acc
+      })
+    }
+
+    variableRegisters(15) = if (display.collision) 1.toByte else 0.toByte
+    display = newDisplay.clearCollision()
+  }
+
+  def byteToBool(input: Int) = {
+    val byte = fixSigned(input)
+    (0 until 8).foldLeft(new Array[Boolean](8))((acc, el) => {
+      acc(el) = ((byte >> el) & 1) != 0
+      acc
+    }).toSeq.reverse
+  }
+  def fixSigned(byte: Int): Int = byte & 255
 }
 
 object ChipVMLogic {

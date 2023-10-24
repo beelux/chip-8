@@ -24,6 +24,7 @@ class ChipVM extends GameBase {
   val heightPerCell: Float = screenArea.height / gridDims.height
 
   override def draw(): Unit = {
+    for(_ <- 0 until 2)
       if (updateState())
         drawGrid()
   }
