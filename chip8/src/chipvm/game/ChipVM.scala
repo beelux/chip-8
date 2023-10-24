@@ -28,8 +28,6 @@ class ChipVM extends GameBase {
         drawGrid()
   }
 
-  // TODO: only draw white cell
-  // background is simply filled black
   def drawGrid(): Unit = {
     setFillColor(Color.Black)
     drawRectangle(screenArea)
