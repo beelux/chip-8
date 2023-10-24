@@ -10,16 +10,16 @@ import processing.core.{PApplet, PConstants}
 class GameBase   extends PApplet {
 
   // inner class: can call current time of outer class
-  class UpdateTimer(val framesPerSecond: Float) {
-
-    val frameDuration: Float = 1000 / framesPerSecond // ms
-    var nextFrame: Float = Float.MaxValue
-
-    def init(): Unit = nextFrame = currentTime() + frameDuration
-    def timeForNextFrame(): Boolean = currentTime() >= nextFrame
-    def advanceFrame(): Unit = nextFrame = nextFrame + frameDuration
-
-  }
+//  class UpdateTimer(val framesPerSecond: Float) {
+//
+//    val frameDuration: Float = 1000 / framesPerSecond // ms
+//    var nextFrame: Float = Float.MaxValue
+//
+//    def init(): Unit = nextFrame = currentTime() + frameDuration
+//    def timeForNextFrame(): Boolean = currentTime() >= nextFrame
+//    def advanceFrame(): Unit = nextFrame = nextFrame + frameDuration
+//
+//  }
 
   // ===Processing Wrappers & Abstractions===
 
@@ -27,7 +27,7 @@ class GameBase   extends PApplet {
     *
     * @return Current time in milliseconds since stating the program.
     */
-  def currentTime(): Int = millis()
+  //def currentTime(): Int = millis()
 
   def drawTextCentered(string: String, size: Float, center: Point): Unit = {
     val (x, y) = (center.x, center.y-(size/2))

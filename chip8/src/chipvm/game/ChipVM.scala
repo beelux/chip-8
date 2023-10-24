@@ -14,17 +14,16 @@ import chipvm.logic.{Point => GridPoint}
 
 class ChipVM extends GameBase {
   var gameLogic : ChipVMLogic = ChipVMLogic()
-  val instructionTimer = new UpdateTimer(ChipVMLogic.InstructionsPerSecond.toFloat)
-  val timerTimer = new UpdateTimer(ChipVMLogic.timerFrequency.toFloat)
+  val newTimer = new java.util.Timer()
   val gridDims : Dimensions = ChipVMLogic.DefaultDims
   val widthInPixels: Int = (WidthCellInPixels * gridDims.width).ceil.toInt
   val heightInPixels: Int = (HeightCellInPixels * gridDims.height).ceil.toInt
   val screenArea: Rectangle = Rectangle(Point(0, 0), widthInPixels.toFloat, heightInPixels.toFloat)
   val widthPerCell: Float = screenArea.width / gridDims.width
   val heightPerCell: Float = screenArea.height / gridDims.height
+  var timer: Int = 10
 
   override def draw(): Unit = {
-    for(_ <- 0 until 2)
       if (updateState())
         drawGrid()
   }
@@ -55,18 +54,22 @@ class ChipVM extends GameBase {
   }
 
   override def setup(): Unit = {
-    gameLogic.readROM("roms/1-chip8-logo.ch8")
 
-    instructionTimer.init()
-    timerTimer.init()
+    gameLogic.readROM("roms/1-chip8-logo.ch8")
+    this.frameRate(600)
+
+    //instructionTimer.init()
+    //timerTimer.init()
   }
 
   def updateState(): Boolean = {
-    if (instructionTimer.timeForNextFrame()) {
-      val result = gameLogic.loop
-      instructionTimer.advanceFrame()
-      result
-    } else false
+    if(timer==0) {
+      timer=10
+      gameLogic.timerTick()
+    } else timer -= 1
+
+    val result = gameLogic.loop
+    result
   }
 }
 

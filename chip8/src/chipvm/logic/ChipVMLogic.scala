@@ -13,11 +13,16 @@ class ChipVMLogic(val memory: Array[Byte], // 4 kilobytes, 4096 bytes of memory
                   var pc: Short, // 12-bit (max 4096)
                   var i: Short, // index register
                   val stack: Stack[Short], // stack of 16-bit addresses
-                  var delayTimer: Byte, // 8-bit timer, decreased at 60 times per second
-                  var soundTimer: Byte, // same, but BEEP as long as not 0
+                  var delayTimer: Int, // 8-bit timer, decreased at 60 times per second
+                  var soundTimer: Int, // same, but BEEP as long as not 0
                   val variableRegisters: Array[Byte] // 16 8-bit registers (0-F / 0-15)
                  ) {
   def moveDown(): Unit = ()
+
+  def timerTick(): Unit = {
+    if (delayTimer > 0) delayTimer = delayTimer - 1
+    if (soundTimer > 0) soundTimer = soundTimer - 1
+  }
 
   def keyPressed(keyCode: Int): Unit = {
     keyCode match {
@@ -84,7 +89,11 @@ class ChipVMLogic(val memory: Array[Byte], // 4 kilobytes, 4096 bytes of memory
         val value = instruction._2.toByte
 
         variableRegisters(register) = value
-      case 0x7 => print("7")
+      case 0x7 => // Add
+        val register = nibbles._2.toByte
+        val value = fixSigned(instruction._2)
+
+        variableRegisters(register) = (variableRegisters(register) + value).toByte
       case 0xA =>
         i = ((fixSigned(nibbles._2) << 8) + fixSigned(instruction._2)).toShort
       case 0xD =>
