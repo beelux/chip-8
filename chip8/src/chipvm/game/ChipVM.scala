@@ -24,8 +24,8 @@ class ChipVM extends GameBase {
   val heightPerCell: Float = screenArea.height / gridDims.height
 
   override def draw(): Unit = {
-    updateState()
-    drawGrid()
+      if (updateState())
+        drawGrid()
   }
 
   def drawGrid(): Unit = {
@@ -68,11 +68,12 @@ class ChipVM extends GameBase {
     timerTimer.init()
   }
 
-  def updateState(): Unit = {
+  def updateState(): Boolean = {
     if (instructionTimer.timeForNextFrame()) {
       val result = gameLogic.loop
       instructionTimer.advanceFrame()
-    }
+      result
+    } else false
   }
 }
 

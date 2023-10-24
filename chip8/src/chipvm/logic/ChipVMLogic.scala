@@ -90,7 +90,7 @@ class ChipVMLogic(val memory: Array[Byte], // 4 kilobytes, 4096 bytes of memory
         variableRegisters(register) = value
       case 0x7 => print("7")
       case 0xA =>
-        i = ((nibbles._2 << 8) + instruction._2).toShort
+        i = ((fixSigned(nibbles._2) << 8) + fixSigned(instruction._2)).toShort
       case 0xD => {
         val x = variableRegisters(nibbles._2.toByte) % 64
         val y = variableRegisters(nibbles._3.toByte) % 32
@@ -99,10 +99,7 @@ class ChipVMLogic(val memory: Array[Byte], // 4 kilobytes, 4096 bytes of memory
 
         variableRegisters(15) = {
           data.zipWithIndex.foldLeft(0.toByte)( (acc, byte) => {
-            val line = byte._1.toBinaryString.map[Boolean] {
-              case '1' => true
-              case '0' => false
-            }
+            val line = byteToBool(byte._1)
 
             val curY = y + byte._2
 
@@ -132,6 +129,15 @@ class ChipVMLogic(val memory: Array[Byte], // 4 kilobytes, 4096 bytes of memory
     (instruction._1 == 0x0.toByte && instruction._2 == 0xe0.toByte) || nibbles._1 == 0xD.toByte
   }
 
+  def byteToBool(input: Int) = {
+    val byte = fixSigned(input)
+    (0 until 8).foldLeft(new Array[Boolean](8))( (acc, el) => {
+      acc(el) = ((byte >> el) & 1) != 0
+      acc
+    }).toSeq.reverse
+  }
+  def fixSigned(byte: Int) : Int = byte & 255
+
   def cls(): Unit = {
     display = makeEmptyBoard
   }
@@ -145,8 +151,8 @@ class ChipVMLogic(val memory: Array[Byte], // 4 kilobytes, 4096 bytes of memory
 
 object ChipVMLogic {
 
-  val InstructionsPerSecond: Int = 700
-  val timerFrequency: Int = 60
+  val InstructionsPerSecond: Int = 7000
+  val timerFrequency: Int = 6000
 
   // Source: https://tobiasvl.github.io/blog/write-a-chip-8-emulator/
   val font: ArraySeq[ArraySeq[Byte]] = ArraySeq(
