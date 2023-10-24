@@ -3,7 +3,7 @@ package chipvm.logic
 case class Display(onCells : Set[Point] = Set[Point](),
                    collision : Boolean = false) {
   def clear() : Display = {
-    new Display
+    this.copy(collision = collision)
   }
 
   def clearCollision() : Display = {
@@ -15,10 +15,18 @@ case class Display(onCells : Set[Point] = Set[Point](),
     val newCollision = isCellOn || collision
 
     val newCells = {
-      if (isCellOn) onCells - point
-      else          onCells + point
+      if (isCellOn) onCells.-(point)
+      else          onCells.+(point)
     }
 
     this.copy(newCells, newCollision)
+  }
+
+  def flip(x: Int, y: Int) : Display =
+    flip(Point(x, y))
+
+  def at(point: Point): CellType = {
+    if (onCells.contains(point)) Fill
+    else Empty
   }
 }

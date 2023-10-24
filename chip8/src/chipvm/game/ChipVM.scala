@@ -28,6 +28,8 @@ class ChipVM extends GameBase {
         drawGrid()
   }
 
+  // TODO: only draw white cell
+  // background is simply filled black
   def drawGrid(): Unit = {
     for (p <- gridDims.allPointsInside) {
       drawCell(getCell(p), gameLogic.getCellType(p))

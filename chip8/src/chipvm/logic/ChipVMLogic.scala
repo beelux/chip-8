@@ -9,7 +9,7 @@ import java.awt.event.KeyEvent._
 import scala.io.Source
 
 class ChipVMLogic(val memory: Array[Byte], // 4 kilobytes, 4096 bytes of memory
-                  var display: Array[Array[CellType]], // 64x32 display
+                  var display: Display, // 64x32 display
                   var pc: Short, // 12-bit (max 4096)
                   var i: Short, // index register
                   val stack: Stack[Short], // stack of 16-bit addresses
@@ -17,10 +17,6 @@ class ChipVMLogic(val memory: Array[Byte], // 4 kilobytes, 4096 bytes of memory
                   var soundTimer: Byte, // same, but BEEP as long as not 0
                   val variableRegisters: Array[Byte] // 16 8-bit registers (0-F / 0-15)
                  ) {
-
-  def copy(display: Array[Array[CellType]]) =
-    new ChipVMLogic(memory, display, pc, i, stack, delayTimer, soundTimer, variableRegisters)
-
   def moveDown(): Unit = ()
 
   def keyPressed(keyCode: Int): Unit = {
@@ -97,8 +93,7 @@ class ChipVMLogic(val memory: Array[Byte], // 4 kilobytes, 4096 bytes of memory
         val height = nibbles._4.toByte
         val data = memory.slice(i, i + height)
 
-        variableRegisters(15) = {
-          data.zipWithIndex.foldLeft(0.toByte)( (acc, byte) => {
+        val newDisplay = {data.zipWithIndex.foldLeft(display)( (acc, byte) => {
             val line = byteToBool(byte._1)
 
             val curY = y + byte._2
@@ -108,16 +103,15 @@ class ChipVMLogic(val memory: Array[Byte], // 4 kilobytes, 4096 bytes of memory
                 val curX = x + bit._2
 
                 if (bit._1 && curX < 64) {
-                  val flipped = display(curX)(curY).flipped
-                  display(curX)(curY) = flipped
-                  if (flipped == Empty) {
-                    1.toByte
-                  } else acc
+                  acc.flip(curX, curY)
                 } else acc
               })
             } else acc
           })
         }
+
+        variableRegisters(15) = if(display.collision) 1.toByte else 0.toByte
+        display = newDisplay.clearCollision()
       }
     }
 
@@ -139,20 +133,21 @@ class ChipVMLogic(val memory: Array[Byte], // 4 kilobytes, 4096 bytes of memory
   def fixSigned(byte: Int) : Int = byte & 255
 
   def cls(): Unit = {
-    display = makeEmptyBoard
+    display = display.clear()
   }
 
   def ret(): Unit = {
     // TODO
   }
 
-  def getCellType(p: Point): CellType = display(p.x)(p.y)
+  def getCellType(p: Point): CellType =
+    display.at(p)
 }
 
 object ChipVMLogic {
 
-  val InstructionsPerSecond: Int = 7000
-  val timerFrequency: Int = 6000
+  val InstructionsPerSecond: Int = 1000
+  val timerFrequency: Int = 1000
 
   // Source: https://tobiasvl.github.io/blog/write-a-chip-8-emulator/
   val font: ArraySeq[ArraySeq[Byte]] = ArraySeq(
@@ -191,5 +186,5 @@ object ChipVMLogic {
   val Height: Int = 32
   val DefaultDims: Dimensions = Dimensions(width = Width, height = Height)
 
-  def apply() = new ChipVMLogic(new Array[Byte](4096), makeEmptyBoard, 512, 0, Stack[Short](), 0, 0, new Array[Byte](16))
+  def apply() = new ChipVMLogic(new Array[Byte](4096), new Display(), 512, 0, Stack[Short](), 0, 0, new Array[Byte](16))
 }
