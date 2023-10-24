@@ -31,8 +31,12 @@ class ChipVM extends GameBase {
   // TODO: only draw white cell
   // background is simply filled black
   def drawGrid(): Unit = {
-    for (p <- gridDims.allPointsInside) {
-      drawCell(getCell(p), gameLogic.getCellType(p))
+    setFillColor(Color.Black)
+    drawRectangle(screenArea)
+
+    setFillColor(Color.White)
+    for (p <- gameLogic.display.onCells) {
+      drawRectangle(getCell(p))
     }
 
     def getCell(p : GridPoint): Rectangle = {
@@ -40,18 +44,6 @@ class ChipVM extends GameBase {
         screenArea.top + p.y * heightPerCell)
       Rectangle(leftUp, widthPerCell, heightPerCell)
     }
-
-    def drawCell(area: Rectangle, cellType: CellType): Unit = {
-      val color = blockToColor(cellType)
-      setFillColor(color)
-      drawRectangle(area)
-    }
-
-    def blockToColor(color: CellType): Color =
-      color match {
-        case Fill => Color.White
-        case Empty => Color.Black
-      }
   }
 
   override def keyPressed(event: KeyEvent): Unit = {
