@@ -73,6 +73,6 @@ case class ShiftRight(destination: Short, source: Short) extends MathOperation(d
 case class ShiftLeft(destination: Short, source: Short) extends MathOperation(destination, source,
   (_: Short, value2: Short) => {
     val result = fixSigned(value2.toByte << 1).toShort
-    val overflowFlag = (value2 & 0x80).toShort
+    val overflowFlag = ((value2 & 0x80) >> 7).toShort // make it 0 or 1 by shifting the bit
     (result, overflowFlag)
   })
