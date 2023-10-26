@@ -17,8 +17,6 @@ class ChipVMLogic(val memory: Array[Byte], // 4 kilobytes, 4096 bytes of memory
                   var soundTimer: Int, // same, but BEEP as long as not 0
                   val variableRegisters: Array[Byte] // 16 8-bit registers (0-F / 0-15)
                  ) {
-  def moveDown(): Unit = ()
-
   def timerTick(): Unit = {
     if (delayTimer > 0) delayTimer = delayTimer - 1
     if (soundTimer > 0) soundTimer = soundTimer - 1
@@ -128,11 +126,11 @@ class ChipVMLogic(val memory: Array[Byte], // 4 kilobytes, 4096 bytes of memory
 
         val curY = y + byte._2
 
-        if (curY < 32) {
+        if (curY < Height) {
           line.zipWithIndex.foldLeft(acc)((acc, bit) => {
             val curX = x + bit._2
 
-            if (bit._1 && curX < 64) {
+            if (bit._1 && curX < Width) {
               acc.flip(curX, curY)
             } else acc
           })
@@ -156,8 +154,9 @@ class ChipVMLogic(val memory: Array[Byte], // 4 kilobytes, 4096 bytes of memory
 
 object ChipVMLogic {
 
-  val InstructionsPerSecond: Int = 1000
-  val timerFrequency: Int = 1000
+  val InstructionsPerSecond: Int = 700
+  val TimerFrequency = 60 // Hz
+
 
   // Source: https://tobiasvl.github.io/blog/write-a-chip-8-emulator/
   val font: ArraySeq[ArraySeq[Byte]] = ArraySeq(
