@@ -4,19 +4,19 @@ import engine.random.{RandomGenerator, ScalaRandomGen}
 import chipvm.logic.ChipVMLogic._
 import engine.graphics.Color
 
-import scala.collection.mutable.Stack
+import scala.collection.immutable.List
 import scala.collection.immutable.ArraySeq
 import java.awt.event.KeyEvent._
 import scala.io.Source
 
-case class ChipVMLogic(memory: Array[Byte], // 4 kilobytes, 4096 bytes of memory
+case class ChipVMLogic(memory: Array[Short], // 4 kilobytes (using Bytes) - using Short because of signedness of Byte
                   var display: Display, // 64x32 display
-                  var pc: Short, // 12-bit (max 4096)
-                  var i: Short, // index register
-                  stack: Stack[Short], // stack of 16-bit addresses
+                  var pc: Int, // 12-bit (max 4096)
+                  var i: Int, // index register
+                  stack: List[Int], // stack of 16-bit addresses
                   delayTimer: Int, // 8-bit timer, decreased at 60 times per second
                   soundTimer: Int, // same, but BEEP as long as not 0
-                  variableRegisters: Array[Byte] // 16 8-bit registers (0-F / 0-15)
+                  variableRegisters: Array[Short] // 16 8-bit registers (0-F / 0-15)
                  ) {
   def timerTick(): ChipVMLogic = {
     val newDelayTimer = if (delayTimer == 0) 0 else delayTimer - 1
@@ -51,7 +51,7 @@ case class ChipVMLogic(memory: Array[Byte], // 4 kilobytes, 4096 bytes of memory
   def readROM(filePath: String): Unit = {
     val file = Source.fromFile(filePath, "ISO8859-1")
 
-    file.map(_.toByte).copyToArray(memory, 512, 3584)
+    file.map(_.toShort).copyToArray(memory, 512, 3584)
 
     file.close()
   }
@@ -72,10 +72,10 @@ case class ChipVMLogic(memory: Array[Byte], // 4 kilobytes, 4096 bytes of memory
 
     pc = (pc + 2).toShort
 
-    nibbles._1.toByte match {
-      case 0x0 => nibbles._2.toByte match {
-        case 0x0 => nibbles._3.toByte match {
-          case 0xE => nibbles._4.toByte match {
+    nibbles._1 match {
+      case 0x0 => nibbles._2 match {
+        case 0x0 => nibbles._3 match {
+          case 0xE => nibbles._4 match {
             case 0x0 => cls()
             case 0xE => ret()
             case _ => print("unknown instruction")
@@ -87,21 +87,21 @@ case class ChipVMLogic(memory: Array[Byte], // 4 kilobytes, 4096 bytes of memory
       case 0x1 =>
         pc = ((nibbles._2 << 8) + instruction._2).toShort
       case 0x6 =>
-        val register = nibbles._2.toByte
-        val value = instruction._2.toByte
+        val register = nibbles._2
+        val value = instruction._2
 
         variableRegisters(register) = value
       case 0x7 => // Add
-        val register = nibbles._2.toByte
-        val value = fixSigned(instruction._2)
+        val register = nibbles._2
+        val value = instruction._2
 
-        variableRegisters(register) = (variableRegisters(register) + value).toByte
+        variableRegisters(register) = (variableRegisters(register) + value).toShort
       case 0xA =>
-        i = ((fixSigned(nibbles._2) << 8) + fixSigned(instruction._2)).toShort
+        i = ((nibbles._2 << 8) + instruction._2).toShort
       case 0xD =>
-        val x = variableRegisters(nibbles._2.toByte) % 64
-        val y = variableRegisters(nibbles._3.toByte) % 32
-        val height = nibbles._4.toByte
+        val x = variableRegisters(nibbles._2) % 64
+        val y = variableRegisters(nibbles._3) % 32
+        val height = nibbles._4.toShort
         draw(x, y, height)
     }
 
@@ -121,7 +121,7 @@ case class ChipVMLogic(memory: Array[Byte], // 4 kilobytes, 4096 bytes of memory
     // TODO
   }
 
-  def draw(x: Int, y: Int, height: Byte): Unit = {
+  def draw(x: Int, y: Int, height: Short): Unit = {
     val data = memory.slice(i, i + height)
 
     val newDisplay = {
@@ -142,14 +142,13 @@ case class ChipVMLogic(memory: Array[Byte], // 4 kilobytes, 4096 bytes of memory
       })
     }
 
-    variableRegisters(15) = if (display.collision) 1.toByte else 0.toByte
+    variableRegisters(15) = if (display.collision) 1 else 0
     display = newDisplay.clearCollision()
   }
 
   def byteToBool(input: Int) = {
-    val byte = fixSigned(input)
     (0 until 8).foldLeft(new Array[Boolean](8))((acc, el) => {
-      acc(el) = ((byte >> el) & 1) != 0
+      acc(el) = ((input >> el) & 1) != 0
       acc
     }).toSeq.reverse
   }
@@ -189,5 +188,5 @@ object ChipVMLogic {
   val Height: Int = 32
   val DefaultDims: Dimensions = Dimensions(width = Width, height = Height)
 
-  def apply() = new ChipVMLogic(new Array[Byte](4096), new Display(), 512, 0, Stack[Short](), 0, 0, new Array[Byte](16))
+  def apply() = new ChipVMLogic(new Array[Short](4096), new Display(), 512, 0, List[Int](), 0, 0, new Array[Short](16))
 }
