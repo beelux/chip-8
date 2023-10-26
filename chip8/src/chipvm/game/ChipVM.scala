@@ -9,7 +9,7 @@ import processing.core.{PApplet, PConstants}
 import processing.event.KeyEvent
 import chipvm.logic._
 import chipvm.game.ChipVM._
-import chipvm.logic.Instruction._
+import chipvm.logic.instructions.Instruction._
 import chipvm.logic.{Point => GridPoint}
 
 class ChipVM extends GameBase {
@@ -54,7 +54,9 @@ class ChipVM extends GameBase {
 
   override def setup(): Unit = {
     noStroke() // Disable stroke around rectangle
-    gameLogic.readROM("roms/1-chip8-logo.ch8")
+    gameLogic = gameLogic.readROM("roms/1-chip8-logo.ch8")
+    gameLogic = gameLogic.readROM("roms/2-ibm-logo-1.ch8")
+    gameLogic = gameLogic.readROM("roms/3-corax+.ch8")
     this.frameRate(ChipVMLogic.InstructionsPerSecond)
 
     updateTimer.init()
