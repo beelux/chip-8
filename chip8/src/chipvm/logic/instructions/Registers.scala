@@ -35,3 +35,27 @@ case class SetIndex(value: Int) extends Instruction {
   def execute(vm: ChipVMLogic): ChipVMLogic =
     vm.copy(i = value)
 }
+
+case class StoreMemory(index: Short, address: Int) extends Instruction {
+  def execute(vm: ChipVMLogic): ChipVMLogic = {
+    val newMemory = (0 to index).foldLeft(vm.memory)(
+      (acc, index: Int) => {
+        acc.updated(vm.i + index, vm.variableRegisters(index))
+      }
+    )
+
+    vm.copy(memory = newMemory)
+  }
+}
+
+case class LoadMemory(index: Short, address: Int) extends Instruction {
+  def execute(vm: ChipVMLogic): ChipVMLogic = {
+    val newRegisters = (0 to index).foldLeft(vm.variableRegisters)(
+      (acc, index: Int) => {
+        acc.updated(index, vm.memory(vm.i + index))
+      }
+    )
+
+    vm.copy(variableRegisters = newRegisters)
+  }
+}

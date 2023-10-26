@@ -83,11 +83,13 @@ case class ChipVMLogic(memory: Array[Short], // 4 kilobytes (using Bytes) - usin
       case (0x0, 0x0, 0xE, 0xE) => Return()
       case (0x1, _, _, _)       => Jump(_NNN)
       case (0x2, _, _, _)       => CallSubroutine(_NNN)
-      // Register set / add
+      // Registers - Memory
       case (0x6, _, _, _)       => Set(_X__, __NN)
       case (0x7, _, _, _)       => Add(_X__, __NN)
       case (0x8, _, _, 0x0)     => Copy(_X__, __Y_)
       case (0xA, _, _, _)       => SetIndex(_NNN)
+      case (0xF, _, 0x5, 0x5)   => StoreMemory(_X__, i)
+      case (0xF, _, 0x6, 0x5)   => LoadMemory(_X__, i)
       // Skip
       case (0x3, _, _, _)       => SkipValEqual(_X__, __NN)
       case (0x4, _, _, _)       => SkipValNotEqual(_X__, __NN)
