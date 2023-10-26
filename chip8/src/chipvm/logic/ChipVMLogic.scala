@@ -99,9 +99,9 @@ case class ChipVMLogic(memory: Array[Short], // 4 kilobytes (using Bytes) - usin
       case (0x8, _, _, 0x3)     => Xor(_X__, __Y_)
       case (0x8, _, _, 0x4)     => AddRegister(_X__, __Y_)
       case (0x8, _, _, 0x5)     => SubtractRegister(_X__, __Y_)
-//      case (0x8, _, _, 0x6)     => ShiftRight(_X__)
+      case (0x8, _, _, 0x6)     => ShiftRight(_X__, __Y_)
       case (0x8, _, _, 0x7)     => SubtractRegisterReverse(_X__, __Y_)
-//      case (0x8, _, _, 0xE)     => ShiftLeft(_X__)
+      case (0x8, _, _, 0xE)     => ShiftLeft(_X__, __Y_)
       case _                    => Nop()
     }
   }

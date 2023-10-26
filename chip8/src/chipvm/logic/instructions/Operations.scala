@@ -62,3 +62,17 @@ case class SubtractRegisterReverse(subtrahendIndex: Short, minuendIndex: Short)
   extends SubtractOperation(subtrahendIndex, minuendIndex,
                            (subtrahend, minuend) => minuend - subtrahend,
                            (subtrahend, minuend) => if(minuend > subtrahend) 1 else 0)
+
+case class ShiftRight(destination: Short, source: Short) extends MathOperation(destination, source,
+  (_: Short, value2: Short) => {
+    val result = fixSigned(value2.toByte >> 1).toShort
+    val overflowFlag = (value2 & 0x1).toShort
+    (result, overflowFlag)
+  })
+
+case class ShiftLeft(destination: Short, source: Short) extends MathOperation(destination, source,
+  (_: Short, value2: Short) => {
+    val result = fixSigned(value2.toByte << 1).toShort
+    val overflowFlag = (value2 & 0x80).toShort
+    (result, overflowFlag)
+  })
