@@ -69,6 +69,7 @@ case class ChipVMLogic(memory: Array[Short], // 4 kilobytes (using Bytes) - usin
                     (memory(pc) & 0x0F),
                     (memory(pc + 1) & 0xF0) >> 4,
                     (memory(pc + 1) & 0x0F))
+    lazy val _NNN = (nibbles._2 << 8) + instruction._2
 
     pc = (pc + 2).toShort
 
@@ -85,23 +86,26 @@ case class ChipVMLogic(memory: Array[Short], // 4 kilobytes (using Bytes) - usin
         case _ => print("unknown instruction")
       }
       case 0x1 =>
-        pc = ((nibbles._2 << 8) + instruction._2).toShort
+        movePC(_NNN)
+      case 0x2 =>
+        callSubroutine(_NNN)
       case 0x6 =>
         val register = nibbles._2
         val value = instruction._2
 
-        variableRegisters(register) = value
-      case 0x7 => // Add
+        set(register.toShort, value)
+      case 0x7 =>
         val register = nibbles._2
         val value = instruction._2
 
-        variableRegisters(register) = (variableRegisters(register) + value).toShort
+        add(register.toShort, value)
       case 0xA =>
-        i = ((nibbles._2 << 8) + instruction._2).toShort
+        setIndex(_NNN)
       case 0xD =>
         val x = variableRegisters(nibbles._2) % 64
         val y = variableRegisters(nibbles._3) % 32
-        val height = nibbles._4.toShort
+        val height = nibbles._4
+
         draw(x, y, height)
     }
 
@@ -121,7 +125,29 @@ case class ChipVMLogic(memory: Array[Short], // 4 kilobytes (using Bytes) - usin
     // TODO
   }
 
-  def draw(x: Int, y: Int, height: Short): Unit = {
+  def movePC(_NNN: Int) : Unit = {
+    pc = _NNN
+  }
+
+  def callSubroutine(_NNN: Int): Unit = {
+    val newStack = stack.prepended(pc)
+    movePC(_NNN)
+    copy(stack = newStack)
+  }
+
+  def setIndex(_NNN: Int): Unit = {
+    i = _NNN
+  }
+
+  def add(register: Short, value: Short): Unit = {
+    variableRegisters(register) = (variableRegisters(register) + value).toShort
+  }
+
+  def set(register: Short, value: Short): Unit = {
+    variableRegisters(register) = value
+  }
+
+  def draw(x: Int, y: Int, height: Int): Unit = {
     val data = memory.slice(i, i + height)
 
     val newDisplay = {
@@ -188,5 +214,5 @@ object ChipVMLogic {
   val Height: Int = 32
   val DefaultDims: Dimensions = Dimensions(width = Width, height = Height)
 
-  def apply() = new ChipVMLogic(new Array[Short](4096), new Display(), 512, 0, List[Int](), 0, 0, new Array[Short](16))
+  def apply() = new ChipVMLogic(new Array[Short](4096), Display(), 512, 0, List[Int](), 0, 0, new Array[Short](16))
 }
