@@ -69,7 +69,9 @@ case class ChipVMLogic(memory: Array[Short], // 4 kilobytes (using Bytes) - usin
                     (memory(pc) & 0x0F),
                     (memory(pc + 1) & 0xF0) >> 4,
                     (memory(pc + 1) & 0x0F))
+    lazy val _X__ = nibbles._2.toShort
     lazy val _NNN = (nibbles._2 << 8) + instruction._2
+    lazy val __NN = instruction._2
 
     pc = (pc + 2).toShort
 
@@ -107,6 +109,33 @@ case class ChipVMLogic(memory: Array[Short], // 4 kilobytes (using Bytes) - usin
         val height = nibbles._4
 
         draw(x, y, height)
+    }
+
+    def fetch() : Instruction = {
+      val instruction = (memory(pc), memory(pc + 1))
+      val nibbles = ((memory(pc) & 0xF0) >> 4,
+        (memory(pc) & 0x0F),
+        (memory(pc + 1) & 0xF0) >> 4,
+        (memory(pc + 1) & 0x0F))
+      lazy val _X__ = nibbles._2.toShort
+      lazy val _NNN = (nibbles._2 << 8) + instruction._2
+      lazy val __NN = instruction._2
+      lazy val x = variableRegisters(nibbles._2) % 64
+      lazy val y = variableRegisters(nibbles._3) % 32
+      lazy val height = nibbles._4
+
+      pc = (pc + 2).toShort
+
+      nibbles match {
+        case (0x0, 0x0, 0xE, 0x0) => ClearScreen()
+        case (0x0, 0x0, 0xE, 0xE) => Return()
+        case (0x1, _, _, _) => Jump(_NNN)
+        case (0x2, _, _, _) => CallSubroutine(_NNN)
+        case (0x6, _, _, _) => Set(_X__, __NN)
+        case (0x7, _, _, _) => Add(_X__, __NN)
+        case (0xA, _, _, _) => SetIndex(_NNN)
+        case (0xD, _, _, _) => Draw(x, y, height)
+      }
     }
 
 
@@ -171,14 +200,6 @@ case class ChipVMLogic(memory: Array[Short], // 4 kilobytes (using Bytes) - usin
     variableRegisters(15) = if (display.collision) 1 else 0
     display = newDisplay.clearCollision()
   }
-
-  def byteToBool(input: Int) = {
-    (0 until 8).foldLeft(new Array[Boolean](8))((acc, el) => {
-      acc(el) = ((input >> el) & 1) != 0
-      acc
-    }).toSeq.reverse
-  }
-  def fixSigned(byte: Int): Int = byte & 255
 }
 
 object ChipVMLogic {
@@ -213,6 +234,17 @@ object ChipVMLogic {
   val Width: Int = 64
   val Height: Int = 32
   val DefaultDims: Dimensions = Dimensions(width = Width, height = Height)
+
+  val VFIndex: Int = 15
+
+  def byteToBool(input: Int) = {
+    (0 until 8).foldLeft(new Array[Boolean](8))((acc, el) => {
+      acc(el) = ((input >> el) & 1) != 0
+      acc
+    }).toSeq.reverse
+  }
+
+  def fixSigned(byte: Int): Int = byte & 255
 
   def apply() = new ChipVMLogic(new Array[Short](4096), Display(), 512, 0, List[Int](), 0, 0, new Array[Short](16))
 }

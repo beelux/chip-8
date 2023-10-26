@@ -1,6 +1,8 @@
 package chipvm.logic
 
-case class Display(onCells : Set[Point] = Set[Point](),
+import scala.collection.immutable
+
+case class Display(onCells : immutable.Set[Point] = immutable.Set[Point](),
                    collision : Boolean = false) {
   def clear() : Display = {
     this.copy(collision = collision)
