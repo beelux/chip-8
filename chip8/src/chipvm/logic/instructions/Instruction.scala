@@ -14,4 +14,12 @@ object Instruction {
       case _ => false
     }
   }
+
+  def modulo(x: Int, y: Int): Int = {
+    val result = x % y
+    if (result < 0)
+      result + y
+    else
+      result
+  }
 }

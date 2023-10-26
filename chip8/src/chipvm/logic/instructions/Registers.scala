@@ -1,6 +1,7 @@
 package chipvm.logic.instructions
 
 import chipvm.logic.ChipVMLogic
+import chipvm.logic.instructions.Instruction.modulo
 
 case class Set(index: Short, value: Short) extends Instruction {
   def execute(vm: ChipVMLogic): ChipVMLogic = {
@@ -14,7 +15,8 @@ case class Add(index: Short, value: Short) extends Instruction {
     val registers = vm.variableRegisters
 
     val result = (registers(index) + value).toShort
-    val newRegisters = registers.updated(index, result)
+    val overflowedResult = modulo(result, 256).toShort
+    val newRegisters = registers.updated(index, overflowedResult)
     vm.copy(variableRegisters = newRegisters)
   }
 }

@@ -89,10 +89,19 @@ case class ChipVMLogic(memory: Array[Short], // 4 kilobytes (using Bytes) - usin
       case (0x8, _, _, 0x0)     => Copy(_X__, __Y_)
       case (0xA, _, _, _)       => SetIndex(_NNN)
       // Skip
-      //case (0x3, _, _, _)       => SkipValEqual(_X__, __NN)
-      //case (0x4, _, _, _)       => SkipValNotEqual(_X__, __NN)
-      //case (0x5, _, _, 0x0)     => SkipRegisterEqual(_X__, _X__)
-      //case (0x9, _, _, 0x0)     => SkipRegisterNotEqual(_X__, _X__)
+      case (0x3, _, _, _)       => SkipValEqual(_X__, __NN)
+      case (0x4, _, _, _)       => SkipValNotEqual(_X__, __NN)
+      case (0x5, _, _, 0x0)     => SkipRegisterEqual(_X__, __Y_)
+      case (0x9, _, _, 0x0)     => SkipRegisterNotEqual(_X__, __Y_)
+      // Operations
+      case (0x8, _, _, 0x1)     => Or(_X__, __Y_)
+      case (0x8, _, _, 0x2)     => And(_X__, __Y_)
+      case (0x8, _, _, 0x3)     => Xor(_X__, __Y_)
+      case (0x8, _, _, 0x4)     => AddRegister(_X__, __Y_)
+      case (0x8, _, _, 0x5)     => SubtractRegister(_X__, __Y_)
+//      case (0x8, _, _, 0x6)     => ShiftRight(_X__)
+      case (0x8, _, _, 0x7)     => SubtractRegisterReverse(_X__, __Y_)
+//      case (0x8, _, _, 0xE)     => ShiftLeft(_X__)
       case _                    => Nop()
     }
   }

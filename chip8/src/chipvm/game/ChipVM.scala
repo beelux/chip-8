@@ -57,7 +57,7 @@ class ChipVM extends GameBase {
     gameLogic = gameLogic.readROM("roms/1-chip8-logo.ch8")
     gameLogic = gameLogic.readROM("roms/2-ibm-logo-1.ch8")
     gameLogic = gameLogic.readROM("roms/3-corax+.ch8")
-    this.frameRate(ChipVMLogic.InstructionsPerSecond)
+    this.frameRate(ChipVMLogic.InstructionsPerSecond.toFloat)
 
     updateTimer.init()
   }
