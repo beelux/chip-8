@@ -28,7 +28,7 @@ abstract class MathOperation(index1: Short, index2: Short,
 
     val (overflowedResult, overflow) = operation(value1, value2)
 
-    val newRegisters = vm.variableRegisters.updated(VFIndex, overflow).updated(index1, overflowedResult)
+    val newRegisters = vm.variableRegisters.updated(index1, overflowedResult).updated(VFIndex, overflow)
 
     vm.copy(variableRegisters = newRegisters)
   }
