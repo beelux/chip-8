@@ -90,6 +90,8 @@ case class ChipVMLogic(memory: Array[Short], // 4 kilobytes (using Bytes) - usin
       case (0xA, _, _, _)       => SetIndex(_NNN)
       case (0xF, _, 0x5, 0x5)   => StoreMemory(_X__, i)
       case (0xF, _, 0x6, 0x5)   => LoadMemory(_X__, i)
+      case (0xF, _, 0x1, 0xE)   => AddToIndex(_X__)
+      case (0xF, _, 0x3, 0x3)   => StoreBCD(_X__)
       // Skip
       case (0x3, _, _, _)       => SkipValEqual(_X__, __NN)
       case (0x4, _, _, _)       => SkipValNotEqual(_X__, __NN)

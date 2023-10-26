@@ -59,3 +59,25 @@ case class LoadMemory(index: Short, address: Int) extends Instruction {
     vm.copy(variableRegisters = newRegisters)
   }
 }
+
+case class AddToIndex(index: Short) extends Instruction {
+  def execute(vm: ChipVMLogic): ChipVMLogic = {
+    val newI = vm.i + vm.variableRegisters(index)
+    vm.copy(i = newI)
+  }
+}
+
+case class StoreBCD(index: Short) extends Instruction {
+  def execute(vm: ChipVMLogic): ChipVMLogic = {
+    val value = vm.variableRegisters(index)
+    val x__ : Short = (value / 100).toShort
+    val _x_ : Short = ((value % 100) / 10).toShort
+    val __x : Short = (value % 10).toShort
+
+    val newMemory : Array[Short] = vm.memory.updated(vm.i,     x__)
+                                            .updated(vm.i + 1, _x_)
+                                            .updated(vm.i + 2, __x)
+
+    vm.copy(memory = newMemory)
+  }
+}
