@@ -1,6 +1,7 @@
 package chipvm.logic.instructions
 
 import chipvm.logic.ChipVMLogic
+import chipvm.logic.ChipVMLogic.fixSigned
 import chipvm.logic.instructions.Instruction.modulo
 
 case class Set(index: Short, value: Short) extends Instruction {
@@ -14,8 +15,8 @@ case class Add(index: Short, value: Short) extends Instruction {
   def execute(vm: ChipVMLogic): ChipVMLogic = {
     val registers = vm.variableRegisters
 
-    val result = (registers(index) + value).toShort
-    val overflowedResult = modulo(result, 256).toShort
+    val result = fixSigned(registers(index) + value).toShort
+    val overflowedResult = fixSigned(modulo(result, 256)).toShort
     val newRegisters = registers.updated(index, overflowedResult)
     vm.copy(variableRegisters = newRegisters)
   }
@@ -52,7 +53,7 @@ case class LoadMemory(index: Short, address: Int) extends Instruction {
   def execute(vm: ChipVMLogic): ChipVMLogic = {
     val newRegisters = (0 to index).foldLeft(vm.variableRegisters)(
       (acc, index: Int) => {
-        acc.updated(index, vm.memory(vm.i + index))
+        acc.updated(index, fixSigned(vm.memory(vm.i + index)).toShort)
       }
     )
 
@@ -62,14 +63,14 @@ case class LoadMemory(index: Short, address: Int) extends Instruction {
 
 case class AddToIndex(index: Short) extends Instruction {
   def execute(vm: ChipVMLogic): ChipVMLogic = {
-    val newI = vm.i + vm.variableRegisters(index)
+    val newI = vm.i + fixSigned(vm.variableRegisters(index))
     vm.copy(i = newI)
   }
 }
 
 case class StoreBCD(index: Short) extends Instruction {
   def execute(vm: ChipVMLogic): ChipVMLogic = {
-    val value = vm.variableRegisters(index)
+    val value = fixSigned(vm.variableRegisters(index)).toShort
     val x__ : Short = (value / 100).toShort
     val _x_ : Short = ((value % 100) / 10).toShort
     val __x : Short = (value % 10).toShort
