@@ -90,3 +90,13 @@ case class Draw(x: Int, y: Int, height: Int) extends Instruction {
             variableRegisters = newRegisters)
   }
 }
+
+object Instruction {
+  def modifiesDisplay(instruction: Instruction): Boolean = {
+    instruction match {
+      case _: Draw => true
+      case _: ClearScreen => true
+      case _ => false
+    }
+  }
+}

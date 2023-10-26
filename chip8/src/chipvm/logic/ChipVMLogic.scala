@@ -10,9 +10,9 @@ import java.awt.event.KeyEvent._
 import scala.io.Source
 
 case class ChipVMLogic(memory: Array[Short], // 4 kilobytes (using Bytes) - using Short because of signedness of Byte
-                  var display: Display, // 64x32 display
-                  var pc: Int, // 12-bit (max 4096)
-                  var i: Int, // index register
+                  display: Display, // 64x32 display
+                  pc: Int, // 12-bit (max 4096)
+                  i: Int, // index register
                   stack: List[Int], // stack of 16-bit addresses
                   delayTimer: Int, // 8-bit timer, decreased at 60 times per second
                   soundTimer: Int, // same, but BEEP as long as not 0
@@ -56,149 +56,34 @@ case class ChipVMLogic(memory: Array[Short], // 4 kilobytes (using Bytes) - usin
     file.close()
   }
 
-  /**
-   * Fetch / decode / execute loop
-   *
-   * Do not update the display unless necessary
-   *
-   * @return Boolean state: should the display be updated?
-   */
-  def loop(): Boolean = {
+  def fetchDecode(): Instruction = {
     val instruction = (memory(pc), memory(pc + 1))
-    val nibbles = ( (memory(pc) & 0xF0) >> 4,
-                    (memory(pc) & 0x0F),
-                    (memory(pc + 1) & 0xF0) >> 4,
-                    (memory(pc + 1) & 0x0F))
+    val nibbles = ((memory(pc) & 0xF0) >> 4,
+      (memory(pc) & 0x0F),
+      (memory(pc + 1) & 0xF0) >> 4,
+      (memory(pc + 1) & 0x0F))
     lazy val _X__ = nibbles._2.toShort
     lazy val _NNN = (nibbles._2 << 8) + instruction._2
     lazy val __NN = instruction._2
+    lazy val x = variableRegisters(nibbles._2) % 64
+    lazy val y = variableRegisters(nibbles._3) % 32
+    lazy val height = nibbles._4
 
-    pc = (pc + 2).toShort
-
-    nibbles._1 match {
-      case 0x0 => nibbles._2 match {
-        case 0x0 => nibbles._3 match {
-          case 0xE => nibbles._4 match {
-            case 0x0 => cls()
-            case 0xE => ret()
-            case _ => print("unknown instruction")
-          }
-          case _ => print("unknown instruction")
-        }
-        case _ => print("unknown instruction")
-      }
-      case 0x1 =>
-        movePC(_NNN)
-      case 0x2 =>
-        callSubroutine(_NNN)
-      case 0x6 =>
-        val register = nibbles._2
-        val value = instruction._2
-
-        set(register.toShort, value)
-      case 0x7 =>
-        val register = nibbles._2
-        val value = instruction._2
-
-        add(register.toShort, value)
-      case 0xA =>
-        setIndex(_NNN)
-      case 0xD =>
-        val x = variableRegisters(nibbles._2) % 64
-        val y = variableRegisters(nibbles._3) % 32
-        val height = nibbles._4
-
-        draw(x, y, height)
+    nibbles match {
+      case (0x0, 0x0, 0xE, 0x0) => ClearScreen()
+      case (0x0, 0x0, 0xE, 0xE) => Return()
+      case (0x1, _, _, _) => Jump(_NNN)
+      case (0x2, _, _, _) => CallSubroutine(_NNN)
+      case (0x6, _, _, _) => Set(_X__, __NN)
+      case (0x7, _, _, _) => Add(_X__, __NN)
+      case (0xA, _, _, _) => SetIndex(_NNN)
+      case (0xD, _, _, _) => Draw(x, y, height)
     }
-
-    def fetch() : Instruction = {
-      val instruction = (memory(pc), memory(pc + 1))
-      val nibbles = ((memory(pc) & 0xF0) >> 4,
-        (memory(pc) & 0x0F),
-        (memory(pc + 1) & 0xF0) >> 4,
-        (memory(pc + 1) & 0x0F))
-      lazy val _X__ = nibbles._2.toShort
-      lazy val _NNN = (nibbles._2 << 8) + instruction._2
-      lazy val __NN = instruction._2
-      lazy val x = variableRegisters(nibbles._2) % 64
-      lazy val y = variableRegisters(nibbles._3) % 32
-      lazy val height = nibbles._4
-
-      pc = (pc + 2).toShort
-
-      nibbles match {
-        case (0x0, 0x0, 0xE, 0x0) => ClearScreen()
-        case (0x0, 0x0, 0xE, 0xE) => Return()
-        case (0x1, _, _, _) => Jump(_NNN)
-        case (0x2, _, _, _) => CallSubroutine(_NNN)
-        case (0x6, _, _, _) => Set(_X__, __NN)
-        case (0x7, _, _, _) => Add(_X__, __NN)
-        case (0xA, _, _, _) => SetIndex(_NNN)
-        case (0xD, _, _, _) => Draw(x, y, height)
-      }
-    }
-
-
-    // You cannot directly compare Byte to HEX, because Java Bytes are also "signed"
-    // 0xaf == 175
-    // 0xaf.toByte == -81
-    // https://stackoverflow.com/a/22278028
-    (instruction._1 == 0x0.toByte && instruction._2 == 0xe0.toByte) || nibbles._1 == 0xD.toByte
   }
 
-  def cls(): Unit = {
-    display = display.clear()
-  }
-
-  def ret(): Unit = {
-    // TODO
-  }
-
-  def movePC(_NNN: Int) : Unit = {
-    pc = _NNN
-  }
-
-  def callSubroutine(_NNN: Int): Unit = {
-    val newStack = stack.prepended(pc)
-    movePC(_NNN)
-    copy(stack = newStack)
-  }
-
-  def setIndex(_NNN: Int): Unit = {
-    i = _NNN
-  }
-
-  def add(register: Short, value: Short): Unit = {
-    variableRegisters(register) = (variableRegisters(register) + value).toShort
-  }
-
-  def set(register: Short, value: Short): Unit = {
-    variableRegisters(register) = value
-  }
-
-  def draw(x: Int, y: Int, height: Int): Unit = {
-    val data = memory.slice(i, i + height)
-
-    val newDisplay = {
-      data.zipWithIndex.foldLeft(display)((acc, byte) => {
-        val line = byteToBool(byte._1)
-
-        val curY = y + byte._2
-
-        if (curY < Height) {
-          line.zipWithIndex.foldLeft(acc)((acc, bit) => {
-            val curX = x + bit._2
-
-            if (bit._1 && curX < Width) {
-              acc.flip(curX, curY)
-            } else acc
-          })
-        } else acc
-      })
-    }
-
-    variableRegisters(15) = if (display.collision) 1 else 0
-    display = newDisplay.clearCollision()
+  def execute(instruction: Instruction): ChipVMLogic = {
+    val modifiedPC = copy(pc = pc + 2)
+    instruction.execute(modifiedPC)
   }
 }
 

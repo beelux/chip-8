@@ -3,13 +3,13 @@ package chipvm.game
 
 import java.awt.event
 import java.awt.event.KeyEvent._
-
 import engine.GameBase
 import engine.graphics.{Color, Point, Rectangle}
 import processing.core.{PApplet, PConstants}
 import processing.event.KeyEvent
 import chipvm.logic._
 import chipvm.game.ChipVM._
+import chipvm.logic.Instruction._
 import chipvm.logic.{Point => GridPoint}
 
 class ChipVM extends GameBase {
@@ -61,13 +61,19 @@ class ChipVM extends GameBase {
   }
 
   def updateState(): Boolean = {
+    checkTimers()
+
+    val instruction = gameLogic.fetchDecode()
+    gameLogic = gameLogic.execute(instruction)
+
+    modifiesDisplay(instruction)
+  }
+
+  def checkTimers(): Unit = {
     if (updateTimer.timeForTick()) {
       gameLogic.timerTick()
       updateTimer.advanceFrame()
     }
-
-    val result = gameLogic.loop
-    result
   }
 }
 
