@@ -2,24 +2,28 @@ package chipvm.logic
 
 import engine.random.{RandomGenerator, ScalaRandomGen}
 import chipvm.logic.ChipVMLogic._
+import engine.graphics.Color
 
 import scala.collection.mutable.Stack
 import scala.collection.immutable.ArraySeq
 import java.awt.event.KeyEvent._
 import scala.io.Source
 
-class ChipVMLogic(val memory: Array[Byte], // 4 kilobytes, 4096 bytes of memory
+case class ChipVMLogic(memory: Array[Byte], // 4 kilobytes, 4096 bytes of memory
                   var display: Display, // 64x32 display
                   var pc: Short, // 12-bit (max 4096)
                   var i: Short, // index register
-                  val stack: Stack[Short], // stack of 16-bit addresses
-                  var delayTimer: Int, // 8-bit timer, decreased at 60 times per second
-                  var soundTimer: Int, // same, but BEEP as long as not 0
-                  val variableRegisters: Array[Byte] // 16 8-bit registers (0-F / 0-15)
+                  stack: Stack[Short], // stack of 16-bit addresses
+                  delayTimer: Int, // 8-bit timer, decreased at 60 times per second
+                  soundTimer: Int, // same, but BEEP as long as not 0
+                  variableRegisters: Array[Byte] // 16 8-bit registers (0-F / 0-15)
                  ) {
-  def timerTick(): Unit = {
-    if (delayTimer > 0) delayTimer = delayTimer - 1
-    if (soundTimer > 0) soundTimer = soundTimer - 1
+  def timerTick(): ChipVMLogic = {
+    val newDelayTimer = if (delayTimer == 0) 0 else delayTimer - 1
+    val newSoundTimer = if (soundTimer == 0) 0 else soundTimer - 1
+
+    copy(delayTimer = newDelayTimer,
+         soundTimer = newSoundTimer)
   }
 
   def keyPressed(keyCode: Int): Unit = {
@@ -155,8 +159,9 @@ class ChipVMLogic(val memory: Array[Byte], // 4 kilobytes, 4096 bytes of memory
 object ChipVMLogic {
 
   val InstructionsPerSecond: Int = 700
-  val TimerFrequency = 60 // Hz
-
+  val TimerFrequency: Int = 60 // Hz
+  val BackgroundColor: Color = Color(146, 104, 33)
+  val ForegroundColor: Color = Color(247, 206, 70)
 
   // Source: https://tobiasvl.github.io/blog/write-a-chip-8-emulator/
   val font: ArraySeq[ArraySeq[Byte]] = ArraySeq(

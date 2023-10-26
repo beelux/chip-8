@@ -28,10 +28,10 @@ class ChipVM extends GameBase {
   }
 
   def drawGrid(): Unit = {
-    setFillColor(Color.Black)
+    setFillColor(ChipVMLogic.BackgroundColor)
     drawRectangle(screenArea)
 
-    setFillColor(Color.White)
+    setFillColor(ChipVMLogic.ForegroundColor)
     for (p <- gameLogic.display.onCells) {
       drawRectangle(getCell(p))
     }
@@ -53,7 +53,7 @@ class ChipVM extends GameBase {
   }
 
   override def setup(): Unit = {
-
+    noStroke() // Disable stroke around rectangle
     gameLogic.readROM("roms/1-chip8-logo.ch8")
     this.frameRate(ChipVMLogic.InstructionsPerSecond)
 
