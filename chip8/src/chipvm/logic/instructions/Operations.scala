@@ -36,7 +36,7 @@ abstract class MathOperation(index1: Short, index2: Short,
 
 case class AddRegister(index1: Short, index2: Short) extends MathOperation(index1, index2,
   (value1, value2) => {
-    val result = (value1 + value2).toShort
+    val result = fixSigned(value1 + value2).toShort
     val overflow: Short = if (result > 255) 1 else 0
     val overflowedResult: Short = fixSigned(result % 256).toShort
     (overflowedResult, overflow)
