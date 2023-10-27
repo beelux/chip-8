@@ -1,23 +1,5 @@
 package chipvm.logic
 
-//trait UType[T] {
-//  def value: T
-//  // Basic Operators
-//  def +(rhs: UType[T]): UType[T]
-//  def -(rhs: UType[T]): UType[T]
-//  def /(rhs: UType[T]): UType[T]
-//  def *(rhs: UType[T]): UType[T]
-//
-//  // Logic Operators
-//  def &(rhs: UType[T]): UType[T]
-//  def |(rhs: UType[T]): UType[T]
-//  def ^(rhs: UType[T]): UType[T]
-//
-//  // Shifting
-//  def <<(rhs: UType[T]): UType[T]
-//  def >>(rhs: UType[T]): UType[T]
-//}
-
 /**
  * Unsigned Byte
  *
