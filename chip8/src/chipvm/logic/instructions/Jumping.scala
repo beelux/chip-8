@@ -14,45 +14,45 @@ case class Nop() extends Instruction {
 
 case class Return() extends Instruction {
   def execute(vm: ChipVMLogic): ChipVMLogic =
-    vm.copy(pc = vm.stack.head,
+    vm.copy(pc = vm.stack.head.toInt,
       stack = vm.stack.tail)
 }
 
-case class Jump(position: Int) extends Instruction {
+case class Jump(position: UShort) extends Instruction {
   def execute(vm: ChipVMLogic): ChipVMLogic =
-    vm.copy(pc = position)
+    vm.copy(pc = position.toInt)
 }
 
-case class CallSubroutine(position: Int) extends Instruction {
+case class CallSubroutine(position: UShort) extends Instruction {
   def execute(vm: ChipVMLogic): ChipVMLogic =
-    vm.copy(pc = position,
-      stack = vm.stack.prepended(vm.pc))
+    vm.copy(pc = position.toInt,
+      stack = vm.stack.prepended(UShort(vm.pc)))
 }
 
 // Conditional jumping instructions
 
-case class SkipValEqual(index: Short, value: Short) extends Instruction {
+case class SkipValEqual(index: UByte, value: UByte) extends Instruction {
   def execute(vm: ChipVMLogic): ChipVMLogic = {
-    vm.variableRegisters(index) match {
+    vm.variableRegisters(index.toByte) match {
       case `value` => vm.copy(pc = vm.pc + 2)
       case _ => vm
     }
   }
 }
 
-case class SkipValNotEqual(index: Short, value: Short) extends Instruction {
+case class SkipValNotEqual(index: UByte, value: UByte) extends Instruction {
   def execute(vm: ChipVMLogic): ChipVMLogic = {
-    vm.variableRegisters(index) match {
+    vm.variableRegisters(index.toByte) match {
       case `value` => vm
       case _ => vm.copy(pc = vm.pc + 2)
     }
   }
 }
 
-case class SkipRegisterEqual(index1: Short, index2: Short) extends Instruction {
+case class SkipRegisterEqual(index1: UByte, index2: UByte) extends Instruction {
   def execute(vm: ChipVMLogic): ChipVMLogic = {
-    val value1 = vm.variableRegisters(index1)
-    val value2 = vm.variableRegisters(index2)
+    val value1 = vm.variableRegisters(index1.toByte)
+    val value2 = vm.variableRegisters(index2.toByte)
 
     if (value1 == value2)
       vm.copy(pc = vm.pc + 2)
@@ -61,10 +61,10 @@ case class SkipRegisterEqual(index1: Short, index2: Short) extends Instruction {
   }
 }
 
-case class SkipRegisterNotEqual(index1: Short, index2: Short) extends Instruction {
+case class SkipRegisterNotEqual(index1: UByte, index2: UByte) extends Instruction {
   def execute(vm: ChipVMLogic): ChipVMLogic = {
-    val value1 = vm.variableRegisters(index1)
-    val value2 = vm.variableRegisters(index2)
+    val value1 = vm.variableRegisters(index1.toByte)
+    val value2 = vm.variableRegisters(index2.toByte)
 
     if (value1 != value2)
       vm.copy(pc = vm.pc + 2)

@@ -10,14 +10,14 @@ import scala.collection.immutable.ArraySeq
 import java.awt.event.KeyEvent._
 import scala.io.Source
 
-case class ChipVMLogic(memory: Array[Short], // 4 kilobytes (using Bytes) - using Short because of signedness of Byte
+case class ChipVMLogic(memory: Array[UByte], // 4 kilobytes (using Bytes) - using Short because of signedness of Byte
                   display: Display, // 64x32 display
                   pc: Int, // 12-bit (max 4096)
                   i: Int, // index register
-                  stack: List[Int], // stack of 16-bit addresses
+                  stack: List[UShort], // stack of 16-bit addresses
                   delayTimer: Int, // 8-bit timer, decreased at 60 times per second
                   soundTimer: Int, // same, but BEEP as long as not 0
-                  variableRegisters: Array[Short] // 16 8-bit registers (0-F / 0-15)
+                  variableRegisters: Array[UByte] // 16 8-bit registers (0-F / 0-15)
                  ) {
   def timerTick(): ChipVMLogic = {
     val newDelayTimer = if (delayTimer == 0) 0 else delayTimer - 1
@@ -50,10 +50,10 @@ case class ChipVMLogic(memory: Array[Short], // 4 kilobytes (using Bytes) - usin
   }
 
   def readROM(filePath: String): ChipVMLogic = {
-    val cleanMemory = new Array[Short](4096)
+    val cleanMemory = new Array[UByte](4096)
 
     val file = Source.fromFile(filePath, "ISO8859-1")
-    file.map(_.toShort).copyToArray(cleanMemory, 512, 3584)
+    file.map(UByte(_)).copyToArray(cleanMemory, 512, 3584)
     file.close()
 
     copy(memory = cleanMemory)
@@ -61,21 +61,23 @@ case class ChipVMLogic(memory: Array[Short], // 4 kilobytes (using Bytes) - usin
 
   def fetchDecode(): Instruction = {
     val instruction = (memory(pc), memory(pc + 1))
-    val nibbles = ((memory(pc) & 0xF0) >> 4,
-                   (memory(pc) & 0x0F),
-                   (memory(pc + 1) & 0xF0) >> 4,
-                   (memory(pc + 1) & 0x0F))
+    val nibbles = (((memory(pc) & UByte(0xF0)) >> UByte(4)),
+                   (memory(pc) & UByte(0x0F)),
+                   ((memory(pc + 1) & UByte(0xF0)) >> UByte(4)),
+                   (memory(pc + 1) & UByte(0x0F)))
     // Generic Data
-    lazy val _X__ = nibbles._2.toShort
-    lazy val __Y_ = nibbles._3.toShort
-    lazy val _NNN = (nibbles._2 << 8) + instruction._2
+    lazy val _X__ = nibbles._2
+    lazy val __Y_ = nibbles._3
+    lazy val _NNN = (UShort(nibbles._2) << UShort(8)) + UShort(instruction._2)
     lazy val __NN = instruction._2
     // Drawing
-    lazy val x = variableRegisters(nibbles._2) % 64
-    lazy val y = variableRegisters(nibbles._3) % 32
+    lazy val x = variableRegisters(nibbles._2.toInt) % UByte(Width)
+    lazy val y = variableRegisters(nibbles._3.toInt) % UByte(Height)
     lazy val height = nibbles._4
 
-    nibbles match {
+    val intNibbles = (nibbles._1.toInt, nibbles._2.toInt, nibbles._3.toInt, nibbles._4.toInt)
+
+    intNibbles match {
       // Drawing
       case (0x0, 0x0, 0xE, 0x0) => ClearScreen()
       case (0xD, _, _, _)       => Draw(x, y, height)
@@ -160,5 +162,5 @@ object ChipVMLogic {
 
   def fixSigned(byte: Int): Int = byte & 255
 
-  def apply() = new ChipVMLogic(new Array[Short](4096), Display(), 512, 0, List[Int](), 0, 0, new Array[Short](16))
+  def apply() = new ChipVMLogic(new Array[UByte](4096), Display(), 512, 0, List[UShort](), 0, 0, new Array[UByte](16))
 }

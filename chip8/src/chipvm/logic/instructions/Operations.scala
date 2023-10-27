@@ -1,81 +1,80 @@
 package chipvm.logic.instructions
 
-import chipvm.logic.ChipVMLogic
+import chipvm.logic.{ChipVMLogic, UByte}
 import chipvm.logic.ChipVMLogic._
 import chipvm.logic.instructions.Instruction.modulo
 
-abstract class LogicalOperation(index1: Short, index2: Short, operation: (Short, Short) => Int) extends Instruction {
+abstract class LogicalOperation(index1: UByte, index2: UByte, operation: (UByte, UByte) => UByte) extends Instruction {
   def execute(vm: ChipVMLogic): ChipVMLogic = {
-    val value1 = vm.variableRegisters(index1)
-    val value2 = vm.variableRegisters(index2)
+    val value1 = vm.variableRegisters(index1.toByte)
+    val value2 = vm.variableRegisters(index2.toByte)
 
-    val result = fixSigned(operation(value1, value2)).toShort
-    val newRegisters = vm.variableRegisters.updated(index1, result)
+    val result = operation(value1, value2)
+    val newRegisters = vm.variableRegisters.updated(index1.toByte, result)
 
     vm.copy(variableRegisters = newRegisters)
   }
 }
 
-case class Or(index1: Short, index2: Short) extends LogicalOperation(index1, index2, (x, y) => x | y)
-case class And(index1: Short, index2: Short) extends LogicalOperation(index1, index2, (x, y) => x & y)
-case class Xor(index1: Short, index2: Short) extends LogicalOperation(index1, index2, (x, y) => x ^ y)
+case class Or(index1: UByte, index2: UByte) extends LogicalOperation(index1, index2, (x, y) => x | y)
+case class And(index1: UByte, index2: UByte) extends LogicalOperation(index1, index2, (x, y) => x & y)
+case class Xor(index1: UByte, index2: UByte) extends LogicalOperation(index1, index2, (x, y) => x ^ y)
 
-abstract class MathOperation(index1: Short, index2: Short,
-                             operation: (Short, Short) => (Short, Short)) extends Instruction {
+abstract class MathOperation(index1: UByte, index2: UByte,
+                             operation: (UByte, UByte) => (UByte, UByte)) extends Instruction {
   def execute(vm: ChipVMLogic): ChipVMLogic = {
-    val value1 = vm.variableRegisters(index1)
-    val value2 = vm.variableRegisters(index2)
+    val value1 = vm.variableRegisters(index1.toByte)
+    val value2 = vm.variableRegisters(index2.toByte)
 
     val (overflowedResult, overflow) = operation(value1, value2)
 
-    val newRegisters = vm.variableRegisters.updated(index1, overflowedResult).updated(VFIndex, overflow)
+    val newRegisters = vm.variableRegisters.updated(index1.toByte, overflowedResult).updated(VFIndex, overflow)
 
     vm.copy(variableRegisters = newRegisters)
   }
 }
 
-case class AddRegister(index1: Short, index2: Short) extends MathOperation(index1, index2,
+case class AddRegister(index1: UByte, index2: UByte) extends MathOperation(index1, index2,
   (value1, value2) => {
-    val result = fixSigned(value1 + value2).toShort
-    val overflow: Short = if (result > 255) 1 else 0
-    val overflowedResult: Short = fixSigned(result % 256).toShort
-    (overflowedResult, overflow)
+    val result = value1 + value2
+    val overflowableResult = value1.toShort + value2.toShort
+    val overflow: UByte = if (overflowableResult > 255) UByte(1) else UByte(0)
+    (result, overflow)
   })
 
-abstract class SubtractOperation(index1: Short, index2: Short,
-                                 resultFunction: (Short, Short) => Int,
-                                 overflowFunction: (Short, Short) => Short) extends MathOperation(index1, index2,
+abstract class SubtractOperation(index1: UByte, index2: UByte,
+                                 resultFunction: (UByte, UByte) => UByte,
+                                 overflowFunction: (UByte, UByte) => UByte) extends MathOperation(index1, index2,
   (value1, value2) => {
-    val result = fixSigned(resultFunction(value1, value2)).toShort
-    val overflow: Short = overflowFunction(value1, value2)
-    val overflowedResult: Short = fixSigned(modulo(result, 256)).toShort
-    (overflowedResult, overflow)
+    val result = resultFunction(value1, value2)
+    val overflow = overflowFunction(value1, value2)
+    (result, overflow)
   }
 )
 
-case class SubtractRegister(minuendIndex: Short, subtrahendIndex: Short)
+case class SubtractRegister(minuendIndex: UByte, subtrahendIndex: UByte)
   extends SubtractOperation(minuendIndex, subtrahendIndex,
                             (minuend, subtrahend) => minuend - subtrahend,
-                            (minuend, subtrahend) => if(minuend > subtrahend) 1 else 0)
+                            (minuend, subtrahend) => if(minuend > subtrahend) UByte(1) else UByte(0))
 
-case class SubtractRegisterReverse(subtrahendIndex: Short, minuendIndex: Short)
+case class SubtractRegisterReverse(subtrahendIndex: UByte, minuendIndex: UByte)
   extends SubtractOperation(subtrahendIndex, minuendIndex,
                            (subtrahend, minuend) => minuend - subtrahend,
-                           (subtrahend, minuend) => if(minuend > subtrahend) 1 else 0)
+                           (subtrahend, minuend) => if(minuend > subtrahend) UByte(1) else UByte(0))
 
-case class ShiftRight(destination: Short, source: Short) extends MathOperation(destination, source,
-  (_: Short, value2: Short) => {
-    val result = fixSigned(value2.toByte >> 1).toShort
-    val overflowFlag = (value2 & 0x1).toShort
+case class ShiftRight(destination: UByte, source: UByte) extends MathOperation(destination, source,
+  (_: UByte, value2: UByte) => {
+    val result = value2 >> UByte(1)
+    val overflowFlag = value2 & UByte(0x1)
     // set MSB as the overflow value's
     //val result = (intermediate | (value2 & 0x80)).toShort
     (result, overflowFlag)
   })
 
-case class ShiftLeft(destination: Short, source: Short) extends MathOperation(destination, source,
-  (_: Short, value2: Short) => {
-    val result = fixSigned(value2.toByte << 1).toShort
-    val overflowFlag = ((value2 & 0x80) >> 7).toShort // make it 0 or 1 by shifting the bit
+case class ShiftLeft(destination: UByte, source: UByte) extends MathOperation(destination, source,
+  (_: UByte, value2: UByte) => {
+    val result = value2 << UByte(1)
+    val overflowFlag = (value2 & UByte(0x80)) >> UByte(7)
     // set LSB as the overflow value
     // val result = (intermediate | (value2 & 0x1)).toShort
     (result, overflowFlag)
