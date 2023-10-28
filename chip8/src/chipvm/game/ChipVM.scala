@@ -43,7 +43,7 @@ class ChipVM extends GameBase {
     }
   }
 
-  override def keyPressed(event: KeyEvent): Unit = {
+  override def keyReleased(event: KeyEvent): Unit = {
     gameLogic.keyPressed(event.getKeyCode)
   }
 
@@ -57,8 +57,8 @@ class ChipVM extends GameBase {
     gameLogic = gameLogic.readROM("roms/1-chip8-logo.ch8")
     gameLogic = gameLogic.readROM("roms/2-ibm-logo-1.ch8")
     gameLogic = gameLogic.readROM("roms/3-corax+.ch8")
-    //gameLogic = gameLogic.readROM("roms/4-flags.ch8")
-    //gameLogic = gameLogic.readROM("roms/5-quirks.ch8")
+    gameLogic = gameLogic.readROM("roms/4-flags.ch8")
+    gameLogic = gameLogic.readROM("roms/5-quirks.ch8")
     //gameLogic = gameLogic.readROM("roms/6-keypad.ch8")
     //gameLogic = gameLogic.readROM("roms/sir.ch8")
     this.frameRate(ChipVMLogic.InstructionsPerSecond.toFloat)

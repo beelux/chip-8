@@ -5,7 +5,7 @@ import scala.collection.immutable
 case class Display(onCells : immutable.Set[Point] = immutable.Set[Point](),
                    collision : Boolean = false) {
   def clear() : Display = {
-    this.copy(collision = collision)
+    this.copy(immutable.Set[Point](), collision)
   }
 
   def clearCollision() : Display = {

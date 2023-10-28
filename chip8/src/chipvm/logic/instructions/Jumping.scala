@@ -23,6 +23,13 @@ case class Jump(position: UShort) extends Instruction {
     vm.copy(pc = position.toInt)
 }
 
+case class JumpOffset(position: UShort) extends Instruction {
+  def execute(vm: ChipVMLogic): ChipVMLogic = {
+    val newPosition = position + vm.variableRegisters(0).toUShort
+    vm.copy(pc = newPosition.toInt)
+  }
+}
+
 case class CallSubroutine(position: UShort) extends Instruction {
   def execute(vm: ChipVMLogic): ChipVMLogic =
     vm.copy(pc = position.toInt,

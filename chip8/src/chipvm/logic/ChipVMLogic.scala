@@ -14,13 +14,13 @@ case class ChipVMLogic(memory: Array[UByte], // 4 kilobytes (using Bytes) - usin
                   pc: Int, // 12-bit (max 4096)
                   i: Int, // index register
                   stack: List[UShort], // stack of 16-bit addresses
-                  delayTimer: Int, // 8-bit timer, decreased at 60 times per second
-                  soundTimer: Int, // same, but BEEP as long as not 0
+                  delayTimer: UByte, // 8-bit timer, decreased at 60 times per second
+                  soundTimer: UByte, // same, but BEEP as long as not 0
                   variableRegisters: Array[UByte], // 16 8-bit registers (0-F / 0-15)
                   pressedKeys: Array[Boolean]) {
   def timerTick(): ChipVMLogic = {
-    val newDelayTimer = if (delayTimer == 0) 0 else delayTimer - 1
-    val newSoundTimer = if (soundTimer == 0) 0 else soundTimer - 1
+    val newDelayTimer = if (delayTimer == 0) UByte(0) else delayTimer - UByte(1)
+    val newSoundTimer = if (soundTimer == 0) UByte(0) else soundTimer - UByte(1)
 
     copy(delayTimer = newDelayTimer,
          soundTimer = newSoundTimer)
@@ -48,6 +48,7 @@ case class ChipVMLogic(memory: Array[UByte], // 4 kilobytes (using Bytes) - usin
     }
 
     pressedKeys(index) = true
+    println(pressedKeys.mkString("(", ", ", ")"))
   }
 
   def readROM(filePath: String): ChipVMLogic = {
@@ -87,6 +88,7 @@ case class ChipVMLogic(memory: Array[UByte], // 4 kilobytes (using Bytes) - usin
       // Jump + Subroutines
       case (0x0, 0x0, 0xE, 0xE) => Return()
       case (0x1, _, _, _)       => Jump(_NNN)
+      case (0xB, _, _, _)       => JumpOffset(_NNN)
       case (0x2, _, _, _)       => CallSubroutine(_NNN)
       // Registers - Memory
       case (0x6, _, _, _)       => Set(_X__, __NN)
@@ -115,8 +117,13 @@ case class ChipVMLogic(memory: Array[UByte], // 4 kilobytes (using Bytes) - usin
       case (0xE, _, 0x9, 0xE)   => SkipKeyPressed(_X__)
       case (0xE, _, 0xA, 0x1)   => SkipKeyNotPressed(_X__)
       case (0xF, _, 0x0, 0xA)   => WaitForKey(_X__)
+      // Timers
+      case (0xF, _, 0x0, 0x7)   => CopyDelayTimerToRegister(_X__)
+      case (0xF, _, 0x1, 0x5)   => SetSoundTimer(_X__)
+      case (0xF, _, 0x1, 0x8)   => SetDelayTimer(_X__)
       //
-      case _                    => Nop()
+      case _                    => println(s"Unknown instruction: $intNibbles")
+                                   Nop()
     }
   }
 
@@ -170,5 +177,5 @@ object ChipVMLogic {
 
   def fixSigned(byte: Int): Int = byte & 255
 
-  def apply() = new ChipVMLogic(new Array[UByte](4096), Display(), 512, 0, List[UShort](), 0, 0, new Array[UByte](16), new Array[Boolean](16))
+  def apply() = new ChipVMLogic(new Array[UByte](4096), Display(), 512, 0, List[UShort](), UByte(0), UByte(0), new Array[UByte](16), new Array[Boolean](16))
 }

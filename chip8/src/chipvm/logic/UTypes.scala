@@ -41,10 +41,12 @@ case class UByte(value: Byte) {
 
   def >(rhs: UByte): Boolean = toShort > rhs.toShort
   def <(rhs: UByte): Boolean = toShort < rhs.toShort
+  def ==(rhs: Int): Boolean = toInt == rhs
 
   // Quirk of JVM: if MSB is set, it will fill 1s on the left during casting (signed Two's complement)
   def toInt: Int = value & 0xFF
   def toShort: Short = toInt.toShort
+  def toUShort: UShort = UShort(toShort)
   def toByte: Byte = value
   override def toString: String = toInt.toString
   def toBinary: String = {
@@ -100,6 +102,7 @@ case class UShort(value: Short) {
 
   def toInt: Int = value & 0xFFFF
   def toByte: Byte = toInt.toByte
+  def toUByte: UByte = UByte(toByte)
   override def toString: String = toInt.toString
   def toBinary: String = {
     val binary = toInt.toBinaryString
