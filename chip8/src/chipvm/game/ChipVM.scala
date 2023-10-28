@@ -11,11 +11,8 @@ import chipvm.logic._
 import chipvm.game.ChipVM._
 import chipvm.logic.instructions.Instruction._
 import chipvm.logic.{Point => GridPoint}
-import ddf.minim.ugens.{Oscil, Waves}
-import ddf.minim.{AudioOutput, Minim}
 
 class ChipVM extends GameBase {
-  //var out: AudioOutput = minim.getLineOut()
   var gameLogic : ChipVMLogic = ChipVMLogic()
   val updateTimer = new UpdateTimer(ChipVMLogic.TimerFrequency.toFloat)
   val gridDims : Dimensions = ChipVMLogic.DefaultDims
@@ -64,16 +61,19 @@ class ChipVM extends GameBase {
     noStroke() // Disable stroke around rectangle
     gameLogic = gameLogic.readROM("roms/1-chip8-logo.ch8")
     //gameLogic = gameLogic.readROM("roms/2-ibm-logo-1.ch8")
-    //gameLogic = gameLogic.readROM("roms/3-corax+.ch8")
-    //gameLogic = gameLogic.readROM("roms/4-flags.ch8")
-    gameLogic = gameLogic.readROM("roms/5-quirks.ch8")
+    gameLogic = gameLogic.readROM("roms/3-corax+.ch8")
+    gameLogic = gameLogic.readROM("roms/4-flags.ch8")
+    //gameLogic = gameLogic.readROM("roms/5-quirks.ch8")
+    gameLogic = gameLogic.readROM("roms/RPS.ch8")
     //gameLogic = gameLogic.readROM("roms/6-keypad.ch8")
     //gameLogic = gameLogic.readROM("roms/sir.ch8")
-    gameLogic = gameLogic.readROM("roms/morse_demo.ch8")
-    gameLogic = gameLogic.readROM("roms/war.ch8")
+    //gameLogic = gameLogic.readROM("roms/morse_demo.ch8")
+    //gameLogic = gameLogic.readROM("roms/war.ch8")
+    //gameLogic = gameLogic.readROM("roms/war.ch8")
     //gameLogic = gameLogic.readROM("roms/audio.ch8")
     this.frameRate(ChipVMLogic.InstructionsPerSecond.toFloat)
 
+    drawGrid()
     updateTimer.init()
   }
 
@@ -90,6 +90,7 @@ class ChipVM extends GameBase {
     if (updateTimer.timeForTick()) {
       val newLogic = gameLogic.timerTick()
       updateTimer.advanceFrame()
+
       newLogic
     } else gameLogic
   }

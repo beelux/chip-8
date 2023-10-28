@@ -3,6 +3,7 @@ package chipvm.logic.instructions
 import chipvm.logic.{ChipVMLogic, UByte}
 import chipvm.logic.ChipVMLogic._
 import chipvm.logic.instructions.Instruction.modulo
+import engine.random.ScalaRandomGen
 
 abstract class LogicalOperation(index1: UByte, index2: UByte, operation: (UByte, UByte) => UByte) extends Instruction {
   def execute(vm: ChipVMLogic): ChipVMLogic = {
@@ -82,10 +83,10 @@ case class ShiftLeft(destination: UByte, source: UByte) extends MathOperation(de
 
 case class Random(index: UByte, mask: UByte) extends Instruction {
   def execute(vm: ChipVMLogic): ChipVMLogic = {
-    val generator = scala.util.Random
-    generator.setSeed(System.currentTimeMillis())
+    val generator = new ScalaRandomGen()
+    //generator.setSeed(System.currentTimeMillis())
 
-    val random = UByte(generator.nextInt(256))
+    val random = UByte(generator.randomInt(256))
     val result = random & mask
 
     vm.copy(variableRegisters = vm.variableRegisters.updated(index.toByte, result))

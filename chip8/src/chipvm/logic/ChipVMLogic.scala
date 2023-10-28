@@ -20,13 +20,15 @@ case class ChipVMLogic(memory: Array[UByte], // 4 kilobytes (using Bytes) - usin
                   variableRegisters: Array[UByte], // 16 8-bit registers (0-F / 0-15)
                   pressedKeys: Array[Boolean], // these keys are currently pressed
                   waitForKeyIndex: Option[Int], // 0xFX0A - store the key we're waiting to be released
+                  isDrawable: Boolean, // Drawing is only allowed 60 times per second
                   quirks: Map[String,Boolean]) {
   def timerTick(): ChipVMLogic = {
     val newDelayTimer = if (delayTimer == 0) UByte(0) else delayTimer - UByte(1)
     val newSoundTimer = if (soundTimer == 0) UByte(0) else soundTimer - UByte(1)
 
     copy(delayTimer = newDelayTimer,
-         soundTimer = newSoundTimer)
+         soundTimer = newSoundTimer,
+         isDrawable = true)
   }
 
   def getIndexFromKeyCode(keyCode: Int): Option[Int] = {
@@ -79,7 +81,19 @@ case class ChipVMLogic(memory: Array[UByte], // 4 kilobytes (using Bytes) - usin
 
     font.flatten.map(UByte(_)).copyToArray(cleanMemory, 0, 512)
 
-    copy(memory = cleanMemory, quirks = parseProperties(readPropertiesFromDisk))
+    val cleanedRegisters = variableRegisters.map(_ => UByte(0))
+
+    copy(memory = cleanMemory,
+      pc = 512,
+      i = 0,
+      variableRegisters = cleanedRegisters,
+      waitForKeyIndex = None,
+      isDrawable = true,
+      display = Display(),
+      stack = List[UShort](),
+      soundTimer = UByte(0),
+      delayTimer = UByte(0),
+      quirks = parseProperties(readPropertiesFromDisk))
   }
 
   def parseProperties(properties: Properties): Map[String, Boolean] = {
@@ -133,6 +147,12 @@ case class ChipVMLogic(memory: Array[UByte], // 4 kilobytes (using Bytes) - usin
     lazy val height = nibbles._4
 
     val intNibbles = (nibbles._1.toInt, nibbles._2.toInt, nibbles._3.toInt, nibbles._4.toInt)
+
+    // print current instruction in HEX
+    // this is in DEC: println(s"Instruction: $intNibbles")
+    val hexString = f"${instruction._1.toInt}%02X${instruction._2.toInt}%02X"
+    println(s"Instruction: $hexString")
+
 
     intNibbles match {
       // Drawing
@@ -224,5 +244,5 @@ object ChipVMLogic {
 
   val VFIndex: Int = 15
 
-  def apply() = new ChipVMLogic(new Array[UByte](4096), Display(), 512, 0, List[UShort](), UByte(0), UByte(0), new Array[UByte](16), new Array[Boolean](16), None, Map[String, Boolean]())
+  def apply() = new ChipVMLogic(new Array[UByte](4096), Display(), 512, 0, List[UShort](), UByte(0), UByte(0), new Array[UByte](16), new Array[Boolean](16), None, true, Map[String, Boolean]())
 }
