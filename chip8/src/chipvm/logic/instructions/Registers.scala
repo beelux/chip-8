@@ -44,7 +44,14 @@ case class StoreMemory(index: UByte, address: Int) extends Instruction {
       }
     )
 
-    vm.copy(memory = newMemory)
+    val newI = {
+      vm.quirks.getOrElse("memoryQuirk", false) match {
+        case true => vm.i + index.toShort + 1
+        case false => vm.i
+      }
+    }
+
+    vm.copy(memory = newMemory, i = newI)
   }
 }
 
@@ -56,7 +63,14 @@ case class LoadMemory(index: UByte, address: Int) extends Instruction {
       }
     )
 
-    vm.copy(variableRegisters = newRegisters)
+    val newI = {
+      vm.quirks.getOrElse("memoryQuirk", false) match {
+        case true => vm.i + index.toShort + 1
+        case false => vm.i
+      }
+    }
+
+    vm.copy(variableRegisters = newRegisters, i = newI)
   }
 }
 

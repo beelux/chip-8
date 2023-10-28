@@ -2,8 +2,6 @@ package chipvm.logic.instructions
 
 import chipvm.logic._
 
-// Simple jumping instructions
-
 /**
  * Does nothing.
  * Used to halt execution in case of an unknown instruction.

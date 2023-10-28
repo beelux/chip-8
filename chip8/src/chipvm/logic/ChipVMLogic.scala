@@ -7,6 +7,7 @@ import chipvm.logic.instructions._
 
 import scala.collection.immutable.ArraySeq
 import java.awt.event.KeyEvent._
+import java.util.Properties
 import scala.io.Source
 
 case class ChipVMLogic(memory: Array[UByte], // 4 kilobytes (using Bytes) - using Short because of signedness of Byte
@@ -17,7 +18,9 @@ case class ChipVMLogic(memory: Array[UByte], // 4 kilobytes (using Bytes) - usin
                   delayTimer: UByte, // 8-bit timer, decreased at 60 times per second
                   soundTimer: UByte, // same, but BEEP as long as not 0
                   variableRegisters: Array[UByte], // 16 8-bit registers (0-F / 0-15)
-                  pressedKeys: Array[Boolean]) {
+                  pressedKeys: Array[Boolean], // these keys are currently pressed
+                  waitForKeyIndex: Option[Int], // 0xFX0A - store the key we're waiting to be released
+                  quirks: Map[String,Boolean]) {
   def timerTick(): ChipVMLogic = {
     val newDelayTimer = if (delayTimer == 0) UByte(0) else delayTimer - UByte(1)
     val newSoundTimer = if (soundTimer == 0) UByte(0) else soundTimer - UByte(1)
@@ -26,8 +29,8 @@ case class ChipVMLogic(memory: Array[UByte], // 4 kilobytes (using Bytes) - usin
          soundTimer = newSoundTimer)
   }
 
-  def keyPressed(keyCode: Int): Unit = {
-    val index = keyCode match {
+  def getIndexFromKeyCode(keyCode: Int): Option[Int] = {
+    val value = keyCode match {
       case VK_1 => 0x1
       case VK_2 => 0x2
       case VK_3 => 0x3
@@ -44,11 +47,27 @@ case class ChipVMLogic(memory: Array[UByte], // 4 kilobytes (using Bytes) - usin
       case VK_X => 0x0
       case VK_C => 0xB
       case VK_V => 0xF
-      case _ => return // Key does not impact the game
+      case _ => 0xBAD
     }
 
-    pressedKeys(index) = true
-    println(pressedKeys.mkString("(", ", ", ")"))
+    if (value == 0xBAD) None
+    else Some(value)
+  }
+
+  def keyPressed(keyCode: Int): Unit = {
+    val index = getIndexFromKeyCode(keyCode)
+
+    if(index.isDefined) {
+      pressedKeys(index.get) = true
+    }
+  }
+
+  def keyReleased(keyCode: Int): Unit = {
+    val index = getIndexFromKeyCode(keyCode)
+
+    if (index.isDefined) {
+      pressedKeys(index.get) = false
+    }
   }
 
   def readROM(filePath: String): ChipVMLogic = {
@@ -60,7 +79,41 @@ case class ChipVMLogic(memory: Array[UByte], // 4 kilobytes (using Bytes) - usin
 
     font.flatten.map(UByte(_)).copyToArray(cleanMemory, 0, 512)
 
-    copy(memory = cleanMemory)
+    copy(memory = cleanMemory, quirks = parseProperties(readPropertiesFromDisk))
+  }
+
+  def parseProperties(properties: Properties): Map[String, Boolean] = {
+    val javaKeys = properties.keySet()
+    val keys = javaKeys.toArray.map(_.toString)
+    val emptyMap = Map[String, Boolean]()
+
+    keys.foldLeft(emptyMap)((acc, key) => {
+      val value = properties.getProperty(key).toBoolean
+      acc + (key -> value)
+    })
+  }
+
+  def readPropertiesFromDisk: Properties = {
+    try {
+      val quirks = new Properties
+      val quirksFile = new java.io.FileInputStream("quirks.properties")
+      quirks.load(quirksFile)
+      quirksFile.close()
+      quirks
+    } catch {
+      case unableToLoadFile: Exception => getDefaultProperties
+    }
+  }
+
+  def getDefaultProperties: Properties = {
+    val quirks = new Properties()
+    quirks.setProperty("memoryQuirk", "true")
+
+    val quirksFile = new java.io.FileOutputStream("quirks.properties")
+    quirks.store(quirksFile, "Quirks for ChipVM")
+    quirksFile.close()
+
+    quirks
   }
 
   def fetchDecode(): Instruction = {
@@ -168,14 +221,5 @@ object ChipVMLogic {
 
   val VFIndex: Int = 15
 
-  def byteToBool(input: Int): Seq[Boolean] = {
-    (0 until 8).foldLeft(new Array[Boolean](8))((acc, el) => {
-      acc(el) = ((input >> el) & 1) != 0
-      acc
-    }).toSeq.reverse
-  }
-
-  def fixSigned(byte: Int): Int = byte & 255
-
-  def apply() = new ChipVMLogic(new Array[UByte](4096), Display(), 512, 0, List[UShort](), UByte(0), UByte(0), new Array[UByte](16), new Array[Boolean](16))
+  def apply() = new ChipVMLogic(new Array[UByte](4096), Display(), 512, 0, List[UShort](), UByte(0), UByte(0), new Array[UByte](16), new Array[Boolean](16), None, Map[String, Boolean]())
 }

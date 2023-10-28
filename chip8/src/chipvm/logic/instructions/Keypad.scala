@@ -7,7 +7,6 @@ abstract class SkipKey(index: UByte, skipValue: Boolean) extends Instruction {
     val keyIndex = vm.variableRegisters(index.toInt).toInt
 
     val isKeyPressed = vm.pressedKeys(keyIndex)
-    val clearedKeys = vm.pressedKeys.updated(keyIndex, false)
 
     val keepValue = !skipValue
     val pc = isKeyPressed match {
@@ -15,7 +14,7 @@ abstract class SkipKey(index: UByte, skipValue: Boolean) extends Instruction {
       case `keepValue` => vm.pc
     }
 
-    vm.copy(pc = pc, pressedKeys = clearedKeys)
+    vm.copy(pc = pc)
   }
 }
 
@@ -24,13 +23,21 @@ case class SkipKeyNotPressed(index: UByte) extends SkipKey(index, skipValue = fa
 
 case class WaitForKey(index: UByte) extends Instruction {
   def execute(vm: ChipVMLogic): ChipVMLogic = {
-    val firstKeyPressed = vm.pressedKeys.indexOf(true)
+    if(vm.waitForKeyIndex.isEmpty) {
+      val firstKeyPressed = vm.pressedKeys.indexOf(true)
 
-    firstKeyPressed match {
-      case -1 => vm.copy(pc = vm.pc - 2)
-      case key =>
+      firstKeyPressed match {
+        case -1 => vm.copy(pc = vm.pc - 2)
+        case key => vm.copy(waitForKeyIndex = Some(key))
+      }
+    } else {
+      val key = vm.waitForKeyIndex.get
+      if(!vm.pressedKeys(key)) {
         val registers = vm.variableRegisters.updated(index.toInt, UByte(key))
-        vm.copy(variableRegisters = registers)
+        vm.copy(variableRegisters = registers, waitForKeyIndex = None)
+      } else {
+        vm.copy(pc = vm.pc - 2)
+      }
     }
   }
 }
