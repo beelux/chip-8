@@ -79,3 +79,15 @@ case class ShiftLeft(destination: UByte, source: UByte) extends MathOperation(de
     // val result = (intermediate | (value2 & 0x1)).toShort
     (result, overflowFlag)
   })
+
+case class Random(index: UByte, mask: UByte) extends Instruction {
+  def execute(vm: ChipVMLogic): ChipVMLogic = {
+    val generator = scala.util.Random
+    generator.setSeed(System.currentTimeMillis())
+
+    val random = UByte(generator.nextInt(256))
+    val result = random & mask
+
+    vm.copy(variableRegisters = vm.variableRegisters.updated(index.toByte, result))
+  }
+}

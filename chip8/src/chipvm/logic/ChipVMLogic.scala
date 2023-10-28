@@ -4,6 +4,8 @@ import engine.random.{RandomGenerator, ScalaRandomGen}
 import chipvm.logic.ChipVMLogic._
 import engine.graphics.Color
 import chipvm.logic.instructions._
+import ddf.minim.AudioOutput
+import ddf.minim.ugens.{Oscil, Waves}
 
 import scala.collection.immutable.ArraySeq
 import java.awt.event.KeyEvent._
@@ -11,19 +13,30 @@ import java.util.Properties
 import scala.io.Source
 
 case class ChipVMLogic(memory: Array[UByte], // 4 kilobytes (using Bytes) - using Short because of signedness of Byte
-                  display: Display, // 64x32 display
-                  pc: Int, // 12-bit (max 4096)
-                  i: Int, // index register
-                  stack: List[UShort], // stack of 16-bit addresses
-                  delayTimer: UByte, // 8-bit timer, decreased at 60 times per second
-                  soundTimer: UByte, // same, but BEEP as long as not 0
-                  variableRegisters: Array[UByte], // 16 8-bit registers (0-F / 0-15)
-                  pressedKeys: Array[Boolean], // these keys are currently pressed
-                  waitForKeyIndex: Option[Int], // 0xFX0A - store the key we're waiting to be released
-                  quirks: Map[String,Boolean]) {
+                       display: Display, // 64x32 display
+                       pc: Int, // 12-bit (max 4096)
+                       i: Int, // index register
+                       stack: List[UShort], // stack of 16-bit addresses
+                       delayTimer: UByte, // 8-bit timer, decreased at 60 times per second
+                       soundTimer: UByte, // same, but BEEP as long as not 0
+                       variableRegisters: Array[UByte], // 16 8-bit registers (0-F / 0-15)
+                       pressedKeys: Array[Boolean], // these keys are currently pressed
+                       waitForKeyIndex: Option[Int], // 0xFX0A - store the key we're waiting to be released
+                       quirks: Map[String,Boolean],
+                       oscillator: Oscil,
+                       out: AudioOutput) {
+  oscillator.patch(out)
+
   def timerTick(): ChipVMLogic = {
-    val newDelayTimer = if (delayTimer == 0) UByte(0) else delayTimer - UByte(1)
-    val newSoundTimer = if (soundTimer == 0) UByte(0) else soundTimer - UByte(1)
+    val newDelayTimer = if (delayTimer == UByte(0)) UByte(0) else delayTimer - UByte(1)
+
+    val newSoundTimer = if (soundTimer == UByte(0)) {
+      oscillator.setAmplitude(0)
+      UByte(0)
+    } else {
+      oscillator.setAmplitude(0.5f)
+      soundTimer - UByte(1)
+    }
 
     copy(delayTimer = newDelayTimer,
          soundTimer = newSoundTimer)
@@ -72,12 +85,13 @@ case class ChipVMLogic(memory: Array[UByte], // 4 kilobytes (using Bytes) - usin
 
   def readROM(filePath: String): ChipVMLogic = {
     val cleanMemory = new Array[UByte](4096)
+    font.flatten.map(UByte(_)).copyToArray(cleanMemory, 0, 512)
 
     val file = Source.fromFile(filePath, "ISO8859-1")
     file.map(UByte(_)).copyToArray(cleanMemory, 512, 3584)
     file.close()
 
-    font.flatten.map(UByte(_)).copyToArray(cleanMemory, 0, 512)
+
 
     copy(memory = cleanMemory, quirks = parseProperties(readPropertiesFromDisk))
   }
@@ -134,6 +148,7 @@ case class ChipVMLogic(memory: Array[UByte], // 4 kilobytes (using Bytes) - usin
 
     val intNibbles = (nibbles._1.toInt, nibbles._2.toInt, nibbles._3.toInt, nibbles._4.toInt)
 
+    //println(s"instruction: $intNibbles")
     intNibbles match {
       // Drawing
       case (0x0, 0x0, 0xE, 0x0) => ClearScreen()
@@ -152,6 +167,7 @@ case class ChipVMLogic(memory: Array[UByte], // 4 kilobytes (using Bytes) - usin
       case (0xF, _, 0x6, 0x5)   => LoadMemory(_X__, i)
       case (0xF, _, 0x1, 0xE)   => AddToIndex(_X__)
       case (0xF, _, 0x3, 0x3)   => StoreBCD(_X__)
+      case (0xF, _, 0x2, 0x9)   => LoadFont(_X__)
       // Skip
       case (0x3, _, _, _)       => SkipValEqual(_X__, __NN)
       case (0x4, _, _, _)       => SkipValNotEqual(_X__, __NN)
@@ -166,6 +182,7 @@ case class ChipVMLogic(memory: Array[UByte], // 4 kilobytes (using Bytes) - usin
       case (0x8, _, _, 0x6)     => ShiftRight(_X__, __Y_)
       case (0x8, _, _, 0x7)     => SubtractRegisterReverse(_X__, __Y_)
       case (0x8, _, _, 0xE)     => ShiftLeft(_X__, __Y_)
+      case (0xC, _, _, _)       => Random(_X__, __NN)
       // Keys
       case (0xE, _, 0x9, 0xE)   => SkipKeyPressed(_X__)
       case (0xE, _, 0xA, 0x1)   => SkipKeyNotPressed(_X__)
@@ -188,7 +205,7 @@ case class ChipVMLogic(memory: Array[UByte], // 4 kilobytes (using Bytes) - usin
 
 object ChipVMLogic {
 
-  val InstructionsPerSecond: Int = 700
+  val InstructionsPerSecond: Int = 600
   val TimerFrequency: Int = 60 // Hz
   val BackgroundColor: Color = Color(146, 104, 33)
   val ForegroundColor: Color = Color(247, 206, 70)
@@ -212,6 +229,7 @@ object ChipVMLogic {
     ArraySeq[Byte](0xF0.toByte, 0x80.toByte, 0xF0.toByte, 0x80.toByte, 0xF0.toByte), // E
     ArraySeq[Byte](0xF0.toByte, 0x80.toByte, 0xF0.toByte, 0x80.toByte, 0x80.toByte)  // F
   )
+  val FontWidth: Int = 5
 
   val DrawSizeFactor = 1.0 // increase this to make the game bigger
 
@@ -221,5 +239,5 @@ object ChipVMLogic {
 
   val VFIndex: Int = 15
 
-  def apply() = new ChipVMLogic(new Array[UByte](4096), Display(), 512, 0, List[UShort](), UByte(0), UByte(0), new Array[UByte](16), new Array[Boolean](16), None, Map[String, Boolean]())
+  def apply(out: AudioOutput) = new ChipVMLogic(new Array[UByte](4096), Display(), 512, 0, List[UShort](), UByte(0), UByte(0), new Array[UByte](16), new Array[Boolean](16), None, Map[String, Boolean](), new Oscil(440,0.5f,Waves.SQUARE), out)
 }

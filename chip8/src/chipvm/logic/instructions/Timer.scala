@@ -2,6 +2,9 @@ package chipvm.logic.instructions
 
 import chipvm.logic.{ChipVMLogic, UByte, UShort}
 
+import ddf.minim.AudioOutput
+import ddf.minim.ugens.{Oscil, Waves}
+
 // case (0xF, _, 0x0, 0x7)   => CopyDelayTimerToRegister(_X__)
 //      case (0xF, _, 0x1, 0x5)   => SetSoundTimer(_X__)
 //      case (0xF, _, 0x1, 0x8)   => SetDelayTimer(_X__)
@@ -21,8 +24,9 @@ abstract class SetTimer(index: UByte, setTimer: (UByte, ChipVMLogic) => ChipVMLo
 }
 
 case class SetSoundTimer(index: UByte) extends SetTimer(index,
-  (timerValue, vm) =>
+  (timerValue, vm) => {
     vm.copy(soundTimer = timerValue)
+  }
 )
 
 case class SetDelayTimer(index: UByte) extends SetTimer(index,

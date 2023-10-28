@@ -3,11 +3,13 @@
 
 package engine
 
+import ddf.minim.Minim
 import engine.graphics.Color.Black
 import engine.graphics.{Color, Point, Rectangle, Triangle}
 import processing.core.{PApplet, PConstants}
 
 class GameBase   extends PApplet {
+  val minim = new Minim(this)
 
   // inner class: can call current time of outer class
   class UpdateTimer(val frequency: Float) {
