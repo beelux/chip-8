@@ -16,10 +16,6 @@ abstract class LogicalOperation(index1: UByte, index2: UByte, operation: (UByte,
   }
 }
 
-case class Or(index1: UByte, index2: UByte) extends LogicalOperation(index1, index2, (x, y) => x | y)
-case class And(index1: UByte, index2: UByte) extends LogicalOperation(index1, index2, (x, y) => x & y)
-case class Xor(index1: UByte, index2: UByte) extends LogicalOperation(index1, index2, (x, y) => x ^ y)
-
 abstract class MathOperation(index1: UByte, index2: UByte,
                              operation: (UByte, UByte) => (UByte, UByte)) extends Instruction {
   def execute(vm: ChipVMLogic): ChipVMLogic = {
@@ -33,6 +29,10 @@ abstract class MathOperation(index1: UByte, index2: UByte,
     vm.copy(variableRegisters = newRegisters)
   }
 }
+
+case class Or(index1: UByte, index2: UByte) extends MathOperation(index1, index2, (x, y) => (x | y, UByte(0)))
+case class And(index1: UByte, index2: UByte) extends MathOperation(index1, index2, (x, y) => (x & y, UByte(0)))
+case class Xor(index1: UByte, index2: UByte) extends MathOperation(index1, index2, (x, y) => (x ^ y, UByte(0)))
 
 case class AddRegister(index1: UByte, index2: UByte) extends MathOperation(index1, index2,
   (value1, value2) => {
