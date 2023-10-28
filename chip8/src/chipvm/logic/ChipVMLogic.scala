@@ -73,7 +73,7 @@ case class ChipVMLogic(memory: Array[UByte], // 4 kilobytes (using Bytes) - usin
   }
 
   def readROM(filePath: String): ChipVMLogic = {
-    val cleanMemory = new Array[UByte](4096)
+    val cleanMemory = new Array[UByte](4096).map(_ => UByte(0))
 
     val file = Source.fromFile(filePath, "ISO8859-1")
     file.map(UByte(_)).copyToArray(cleanMemory, 512, 3584)
