@@ -10,15 +10,15 @@ import java.awt.event.KeyEvent._
 import java.util.Properties
 import scala.io.Source
 
-case class ChipVMLogic(memory: Array[UByte], // 4 kilobytes (using Bytes) - using Short because of signedness of Byte
+case class ChipVMLogic(memory: Vector[UByte], // 4 kilobytes (using Bytes) - using Short because of signedness of Byte
                   display: Display, // 64x32 display
                   pc: Int, // 12-bit (max 4096)
                   i: Int, // index register
                   stack: List[UShort], // stack of 16-bit addresses
                   delayTimer: UByte, // 8-bit timer, decreased at 60 times per second
                   soundTimer: UByte, // same, but BEEP as long as not 0
-                  variableRegisters: Array[UByte], // 16 8-bit registers (0-F / 0-15)
-                  pressedKeys: Array[Boolean], // these keys are currently pressed
+                  variableRegisters: Vector[UByte], // 16 8-bit registers (0-F / 0-15)
+                  pressedKeys: Vector[Boolean], // these keys are currently pressed
                   waitForKeyIndex: Option[Int], // 0xFX0A - store the key we're waiting to be released
                   isDrawable: Boolean, // Drawing is only allowed 60 times per second
                   quirks: Map[String,Boolean]) {
@@ -56,20 +56,22 @@ case class ChipVMLogic(memory: Array[UByte], // 4 kilobytes (using Bytes) - usin
     else Some(value)
   }
 
-  def keyPressed(keyCode: Int): Unit = {
+  def keyPressed(keyCode: Int): ChipVMLogic = {
     val index = getIndexFromKeyCode(keyCode)
 
     if(index.isDefined) {
-      pressedKeys(index.get) = true
-    }
+      val updatedKeys = pressedKeys.updated(index.get, true)
+      copy(pressedKeys = updatedKeys)
+    } else this
   }
 
-  def keyReleased(keyCode: Int): Unit = {
+  def keyReleased(keyCode: Int): ChipVMLogic = {
     val index = getIndexFromKeyCode(keyCode)
 
     if (index.isDefined) {
-      pressedKeys(index.get) = false
-    }
+      val updatedKeys = pressedKeys.updated(index.get, false)
+      copy(pressedKeys = updatedKeys)
+    } else this
   }
 
   def readROM(filePath: String): ChipVMLogic = {
@@ -83,7 +85,7 @@ case class ChipVMLogic(memory: Array[UByte], // 4 kilobytes (using Bytes) - usin
 
     val cleanedRegisters = variableRegisters.map(_ => UByte(0))
 
-    copy(memory = cleanMemory,
+    copy(memory = cleanMemory.toVector,
       pc = 512,
       i = 0,
       variableRegisters = cleanedRegisters,
@@ -244,5 +246,5 @@ object ChipVMLogic {
 
   val VFIndex: Int = 15
 
-  def apply() = new ChipVMLogic(new Array[UByte](4096), Display(), 512, 0, List[UShort](), UByte(0), UByte(0), new Array[UByte](16), new Array[Boolean](16), None, true, Map[String, Boolean]())
+  def apply() = new ChipVMLogic(new Array[UByte](4096).toVector, Display(), 512, 0, List[UShort](), UByte(0), UByte(0), new Array[UByte](16).toVector, new Array[Boolean](16).toVector, None, true, Map[String, Boolean]())
 }

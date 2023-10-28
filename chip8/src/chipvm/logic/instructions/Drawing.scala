@@ -42,7 +42,7 @@ case class Draw(x: UByte, y: UByte, height: UByte) extends Instruction {
         })
       }
 
-      val newRegisters: Array[UByte] = registers.updated(VFIndex,
+      val newRegisters: Vector[UByte] = registers.updated(VFIndex,
         if (drawnDisplay.collision) UByte(1)
         else UByte(0))
       val newDisplay = drawnDisplay.clearCollision()

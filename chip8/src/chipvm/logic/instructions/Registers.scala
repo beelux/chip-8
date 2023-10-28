@@ -1,6 +1,5 @@
 package chipvm.logic.instructions
 
-import chipvm.logic.ChipVMLogic.FontWidth
 import chipvm.logic.{ChipVMLogic, UByte, UShort}
 import chipvm.logic.instructions.Instruction.modulo
 
@@ -89,7 +88,7 @@ case class StoreBCD(index: UByte) extends Instruction {
     val _x_ = UByte((value % 100) / 10)
     val __x = UByte(value % 10)
 
-    val newMemory : Array[UByte] = vm.memory.updated(vm.i,     x__)
+    val newMemory : Vector[UByte] = vm.memory.updated(vm.i,     x__)
                                             .updated(vm.i + 1, _x_)
                                             .updated(vm.i + 2, __x)
 

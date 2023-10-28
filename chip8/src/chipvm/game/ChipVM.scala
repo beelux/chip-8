@@ -1,8 +1,6 @@
 // scalastyle:off
 package chipvm.game
 
-import java.awt.event
-import java.awt.event.KeyEvent._
 import engine.GameBase
 import engine.graphics.{Color, Point, Rectangle}
 import processing.core.{PApplet, PConstants}
@@ -45,11 +43,11 @@ class ChipVM extends GameBase {
   }
 
   override def keyPressed(event: KeyEvent): Unit = {
-    gameLogic.keyPressed(event.getKeyCode)
+    gameLogic = gameLogic.keyPressed(event.getKeyCode)
   }
 
   override def keyReleased(event: KeyEvent): Unit = {
-    gameLogic.keyReleased(event.getKeyCode)
+    gameLogic = gameLogic.keyReleased(event.getKeyCode)
   }
 
   override def settings(): Unit = {
