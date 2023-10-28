@@ -111,11 +111,12 @@ case class ChipVMLogic(memory: Array[UByte], // 4 kilobytes (using Bytes) - usin
       case (0x8, _, _, 0x6)     => ShiftRight(_X__, __Y_)
       case (0x8, _, _, 0x7)     => SubtractRegisterReverse(_X__, __Y_)
       case (0x8, _, _, 0xE)     => ShiftLeft(_X__, __Y_)
-      case _                    => Nop()
       // Keys
       case (0xE, _, 0x9, 0xE)   => SkipKeyPressed(_X__)
       case (0xE, _, 0xA, 0x1)   => SkipKeyNotPressed(_X__)
       case (0xF, _, 0x0, 0xA)   => WaitForKey(_X__)
+      //
+      case _                    => Nop()
     }
   }
 
@@ -149,7 +150,7 @@ object ChipVMLogic {
     ArraySeq[Byte](0xF0.toByte, 0x80.toByte, 0x80.toByte, 0x80.toByte, 0xF0.toByte), // C
     ArraySeq[Byte](0xE0.toByte, 0x90.toByte, 0x90.toByte, 0x90.toByte, 0xE0.toByte), // D
     ArraySeq[Byte](0xF0.toByte, 0x80.toByte, 0xF0.toByte, 0x80.toByte, 0xF0.toByte), // E
-    ArraySeq[Byte](0xF0.toByte, 0x80.toByte, 0xF0.toByte, 0x80.toByte, 0x80.toByte) // F
+    ArraySeq[Byte](0xF0.toByte, 0x80.toByte, 0xF0.toByte, 0x80.toByte, 0x80.toByte)  // F
   )
 
   val DrawSizeFactor = 1.0 // increase this to make the game bigger

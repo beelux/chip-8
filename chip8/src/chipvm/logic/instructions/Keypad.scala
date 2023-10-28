@@ -4,13 +4,18 @@ import chipvm.logic.{ChipVMLogic, UByte, UShort}
 
 abstract class SkipKey(index: UByte, skipValue: Boolean) extends Instruction {
   def execute(vm: ChipVMLogic): ChipVMLogic = {
-    val key = vm.variableRegisters(index.toInt).toInt
-    val keepValue = !skipValue
+    val keyIndex = vm.variableRegisters(index.toInt).toInt
 
-    vm.pressedKeys(key) match {
-      case `skipValue` => vm.copy(pc = vm.pc + 2)
-      case `keepValue` => vm
+    val isKeyPressed = vm.pressedKeys(keyIndex)
+    val clearedKeys = vm.pressedKeys.updated(keyIndex, false)
+
+    val keepValue = !skipValue
+    val pc = isKeyPressed match {
+      case `skipValue` => vm.pc + 2
+      case `keepValue` => vm.pc
     }
+
+    vm.copy(pc = pc, pressedKeys = clearedKeys)
   }
 }
 

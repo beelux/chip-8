@@ -42,7 +42,7 @@ case class UByte(value: Byte) {
   def >(rhs: UByte): Boolean = toShort > rhs.toShort
   def <(rhs: UByte): Boolean = toShort < rhs.toShort
 
-  // Quirk of JVM: if MSB is set, it will fill 1s on the left during Int casting (signed Two's complement)
+  // Quirk of JVM: if MSB is set, it will fill 1s on the left during casting (signed Two's complement)
   def toInt: Int = value & 0xFF
   def toShort: Short = toInt.toShort
   def toByte: Byte = value
