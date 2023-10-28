@@ -1,7 +1,6 @@
 package chipvm.logic.instructions
 
 import chipvm.logic.{ChipVMLogic, UByte, UShort}
-import chipvm.logic.ChipVMLogic.fixSigned
 import chipvm.logic.instructions.Instruction.modulo
 
 case class Set(index: UByte, value: UByte) extends Instruction {

@@ -5,7 +5,6 @@ import chipvm.logic.ChipVMLogic._
 import engine.graphics.Color
 import chipvm.logic.instructions._
 
-import scala.collection.immutable.List
 import scala.collection.immutable.ArraySeq
 import java.awt.event.KeyEvent._
 import scala.io.Source
@@ -17,8 +16,8 @@ case class ChipVMLogic(memory: Array[UByte], // 4 kilobytes (using Bytes) - usin
                   stack: List[UShort], // stack of 16-bit addresses
                   delayTimer: Int, // 8-bit timer, decreased at 60 times per second
                   soundTimer: Int, // same, but BEEP as long as not 0
-                  variableRegisters: Array[UByte] // 16 8-bit registers (0-F / 0-15)
-                 ) {
+                  variableRegisters: Array[UByte], // 16 8-bit registers (0-F / 0-15)
+                  pressedKeys: Array[Boolean]) {
   def timerTick(): ChipVMLogic = {
     val newDelayTimer = if (delayTimer == 0) 0 else delayTimer - 1
     val newSoundTimer = if (soundTimer == 0) 0 else soundTimer - 1
@@ -28,25 +27,27 @@ case class ChipVMLogic(memory: Array[UByte], // 4 kilobytes (using Bytes) - usin
   }
 
   def keyPressed(keyCode: Int): Unit = {
-    keyCode match {
-      case VK_1 => println("1")
-      case VK_2 => println("2")
-      case VK_3 => println("3")
-      case VK_4 => println("4")
-      case VK_Q => println("Q")
-      case VK_W => println("W")
-      case VK_E => println("E")
-      case VK_R => println("R")
-      case VK_A => println("A")
-      case VK_S => println("S")
-      case VK_D => println("D")
-      case VK_F => println("F")
-      case VK_Z => println("Z")
-      case VK_X => println("X")
-      case VK_C => println("C")
-      case VK_V => println("V")
-      case _ => ()
+    val index = keyCode match {
+      case VK_1 => 0x1
+      case VK_2 => 0x2
+      case VK_3 => 0x3
+      case VK_4 => 0xC
+      case VK_Q => 0x4
+      case VK_W => 0x5
+      case VK_E => 0x6
+      case VK_R => 0xD
+      case VK_A => 0x7
+      case VK_S => 0x8
+      case VK_D => 0x9
+      case VK_F => 0xE
+      case VK_Z => 0xA
+      case VK_X => 0x0
+      case VK_C => 0xB
+      case VK_V => 0xF
+      case _ => return // Key does not impact the game
     }
+
+    pressedKeys(index) = true
   }
 
   def readROM(filePath: String): ChipVMLogic = {
@@ -55,6 +56,8 @@ case class ChipVMLogic(memory: Array[UByte], // 4 kilobytes (using Bytes) - usin
     val file = Source.fromFile(filePath, "ISO8859-1")
     file.map(UByte(_)).copyToArray(cleanMemory, 512, 3584)
     file.close()
+
+    font.flatten.map(UByte(_)).copyToArray(cleanMemory, 0, 512)
 
     copy(memory = cleanMemory)
   }
@@ -109,6 +112,10 @@ case class ChipVMLogic(memory: Array[UByte], // 4 kilobytes (using Bytes) - usin
       case (0x8, _, _, 0x7)     => SubtractRegisterReverse(_X__, __Y_)
       case (0x8, _, _, 0xE)     => ShiftLeft(_X__, __Y_)
       case _                    => Nop()
+      // Keys
+      case (0xE, _, 0x9, 0xE)   => SkipKeyPressed(_X__)
+      case (0xE, _, 0xA, 0x1)   => SkipKeyNotPressed(_X__)
+      case (0xF, _, 0x0, 0xA)   => WaitForKey(_X__)
     }
   }
 
@@ -162,5 +169,5 @@ object ChipVMLogic {
 
   def fixSigned(byte: Int): Int = byte & 255
 
-  def apply() = new ChipVMLogic(new Array[UByte](4096), Display(), 512, 0, List[UShort](), 0, 0, new Array[UByte](16))
+  def apply() = new ChipVMLogic(new Array[UByte](4096), Display(), 512, 0, List[UShort](), 0, 0, new Array[UByte](16), new Array[Boolean](16))
 }
