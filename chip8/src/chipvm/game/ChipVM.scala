@@ -15,8 +15,8 @@ import ddf.minim.ugens.{Oscil, Waves}
 import ddf.minim.{AudioOutput, Minim}
 
 class ChipVM extends GameBase {
-  var out: AudioOutput = minim.getLineOut()
-  var gameLogic : ChipVMLogic = ChipVMLogic(out = out)
+  //var out: AudioOutput = minim.getLineOut()
+  var gameLogic : ChipVMLogic = ChipVMLogic()
   val updateTimer = new UpdateTimer(ChipVMLogic.TimerFrequency.toFloat)
   val gridDims : Dimensions = ChipVMLogic.DefaultDims
   val widthInPixels: Int = (WidthCellInPixels * gridDims.width).ceil.toInt

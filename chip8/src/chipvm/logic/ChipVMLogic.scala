@@ -4,8 +4,6 @@ import engine.random.{RandomGenerator, ScalaRandomGen}
 import chipvm.logic.ChipVMLogic._
 import engine.graphics.Color
 import chipvm.logic.instructions._
-import ddf.minim.AudioOutput
-import ddf.minim.ugens.{Oscil, Waves}
 
 import scala.collection.immutable.ArraySeq
 import java.awt.event.KeyEvent._
@@ -13,30 +11,19 @@ import java.util.Properties
 import scala.io.Source
 
 case class ChipVMLogic(memory: Array[UByte], // 4 kilobytes (using Bytes) - using Short because of signedness of Byte
-                       display: Display, // 64x32 display
-                       pc: Int, // 12-bit (max 4096)
-                       i: Int, // index register
-                       stack: List[UShort], // stack of 16-bit addresses
-                       delayTimer: UByte, // 8-bit timer, decreased at 60 times per second
-                       soundTimer: UByte, // same, but BEEP as long as not 0
-                       variableRegisters: Array[UByte], // 16 8-bit registers (0-F / 0-15)
-                       pressedKeys: Array[Boolean], // these keys are currently pressed
-                       waitForKeyIndex: Option[Int], // 0xFX0A - store the key we're waiting to be released
-                       quirks: Map[String,Boolean],
-                       oscillator: Oscil,
-                       out: AudioOutput) {
-  oscillator.patch(out)
-
+                  display: Display, // 64x32 display
+                  pc: Int, // 12-bit (max 4096)
+                  i: Int, // index register
+                  stack: List[UShort], // stack of 16-bit addresses
+                  delayTimer: UByte, // 8-bit timer, decreased at 60 times per second
+                  soundTimer: UByte, // same, but BEEP as long as not 0
+                  variableRegisters: Array[UByte], // 16 8-bit registers (0-F / 0-15)
+                  pressedKeys: Array[Boolean], // these keys are currently pressed
+                  waitForKeyIndex: Option[Int], // 0xFX0A - store the key we're waiting to be released
+                  quirks: Map[String,Boolean]) {
   def timerTick(): ChipVMLogic = {
-    val newDelayTimer = if (delayTimer == UByte(0)) UByte(0) else delayTimer - UByte(1)
-
-    val newSoundTimer = if (soundTimer == UByte(0)) {
-      oscillator.setAmplitude(0)
-      UByte(0)
-    } else {
-      oscillator.setAmplitude(0.5f)
-      soundTimer - UByte(1)
-    }
+    val newDelayTimer = if (delayTimer == 0) UByte(0) else delayTimer - UByte(1)
+    val newSoundTimer = if (soundTimer == 0) UByte(0) else soundTimer - UByte(1)
 
     copy(delayTimer = newDelayTimer,
          soundTimer = newSoundTimer)
@@ -85,13 +72,12 @@ case class ChipVMLogic(memory: Array[UByte], // 4 kilobytes (using Bytes) - usin
 
   def readROM(filePath: String): ChipVMLogic = {
     val cleanMemory = new Array[UByte](4096)
-    font.flatten.map(UByte(_)).copyToArray(cleanMemory, 0, 512)
 
     val file = Source.fromFile(filePath, "ISO8859-1")
     file.map(UByte(_)).copyToArray(cleanMemory, 512, 3584)
     file.close()
 
-
+    font.flatten.map(UByte(_)).copyToArray(cleanMemory, 0, 512)
 
     copy(memory = cleanMemory, quirks = parseProperties(readPropertiesFromDisk))
   }
@@ -148,7 +134,6 @@ case class ChipVMLogic(memory: Array[UByte], // 4 kilobytes (using Bytes) - usin
 
     val intNibbles = (nibbles._1.toInt, nibbles._2.toInt, nibbles._3.toInt, nibbles._4.toInt)
 
-    //println(s"instruction: $intNibbles")
     intNibbles match {
       // Drawing
       case (0x0, 0x0, 0xE, 0x0) => ClearScreen()
@@ -205,7 +190,7 @@ case class ChipVMLogic(memory: Array[UByte], // 4 kilobytes (using Bytes) - usin
 
 object ChipVMLogic {
 
-  val InstructionsPerSecond: Int = 600
+  val InstructionsPerSecond: Int = 700
   val TimerFrequency: Int = 60 // Hz
   val BackgroundColor: Color = Color(146, 104, 33)
   val ForegroundColor: Color = Color(247, 206, 70)
@@ -239,5 +224,5 @@ object ChipVMLogic {
 
   val VFIndex: Int = 15
 
-  def apply(out: AudioOutput) = new ChipVMLogic(new Array[UByte](4096), Display(), 512, 0, List[UShort](), UByte(0), UByte(0), new Array[UByte](16), new Array[Boolean](16), None, Map[String, Boolean](), new Oscil(440,0.5f,Waves.SQUARE), out)
+  def apply() = new ChipVMLogic(new Array[UByte](4096), Display(), 512, 0, List[UShort](), UByte(0), UByte(0), new Array[UByte](16), new Array[Boolean](16), None, Map[String, Boolean]())
 }
