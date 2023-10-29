@@ -1,5 +1,7 @@
 # CHIP-8 Interpreter - Trix
 
+![CHIP-8 Testing suite Logo](resources/chip8.png)
+
 ## Introduction
 The freedom given to us for the bonus assignment might be freeing for some, but others might find it difficult to choose a project of appropriate size for the limited time.
 The addition of creativity with the restriction of having to use Processing and Minim really made me worry about the feasibility of any bonus I'd do.
@@ -24,7 +26,7 @@ I implemented CHIP-8 as correctly and extensively as I could, yet limitations ar
 - Some roms are buggy (e.g. RPS), but they work well enough to demonstrate the interpreter's full functionality.
   - RPS has a bug where dual input might happen, I fear this might have to do with Processing and Java's AWT.
 
-Note that there was a best effort to make the interpreter immutable.
+Note that there was **a best effort to make the interpreter immutable**.
 
 ## Usage
 ### Run the interpreter
@@ -95,3 +97,18 @@ These are demos that I found online, I did not make them myself, ***nor did I te
   - `C` for Scissors
 - `roms/war.ch8` - Press F to pay respects
   - `V` to pay respects (V is placed on the location of the original keypad's F)
+
+## Tests
+This interpreter passes pretty much all tests across corax+, flags, quirks and keypad:
+
+### `3-corax+.ch8`
+![Corax](resources/corax.png)
+
+### `4-flags.ch8`
+![Flags](resources/flags.png)
+
+### `5-quirks.ch8`
+![Quirks](resources/quirks.png)
+
+### `6-keypad.ch8`
+![Keypad](resources/keypad.png)
