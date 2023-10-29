@@ -287,6 +287,8 @@ object ChipVMLogic {
   )
   val FontWidth: Int = 5
 
+  val InstructionLength: UShort = UShort(2) // 2 bytes
+
   val DrawSizeFactor = 1.0 // increase this to make the game bigger
 
   val Width: Int = 64

@@ -55,12 +55,21 @@ These are various testing roms that I found online and used to test the interpre
 Many games might still be buggy, but this is because they might depend on specific quirks and behaviours I did not implement.
 
 - `roms/1-chip8-logo.ch8`
+  - Displays a CHIP-8 testing suite logo
 - `roms/2-ibm-logo.ch8`
+  - Displays the IBM logo
 - `roms/3-corax+.ch8`
+  - Tests many instructions
 - `roms/4-flags.ch8`
+  - Tests if flags are properly set (VF)
 - `roms/5-quirks.ch8`
+  - quirks that the test suite considers important to follow (might cause bugs in some roms)
 - `roms/6-keypad.ch8`
+  - tests keypad
 - `roms/7-fontTest.ch8`
+  - displays a character from the font set
+- `roms/7-fontTest-Double.ch8`
+  - displays a character twice, as to make the display clear again
 
 ### Demos
 These are demos that I found online, I did not make them myself, ***nor did I test them extensively.***

@@ -70,6 +70,10 @@ object UByte {
   def apply(short: Short): UByte = UByte(short.toByte)
   def apply(uShort: UShort): UByte = UByte(uShort.toByte)
   def apply(binary: String): UByte = UByte(Integer.parseInt(binary, 2).toByte)
+
+  val One: UByte = UByte(1)
+  val Zero: UByte = UByte(0)
+  val max: UByte = UByte(255)
 }
 
 case class UShort(value: Short) {
@@ -118,13 +122,4 @@ object UShort {
   def apply(byte: Byte): UShort = UShort(byte.toShort)
   def apply(uByte: UByte): UShort = UShort(uByte.toShort)
   def apply(binary: String): UShort = UShort(Integer.parseInt(binary, 2).toShort)
-}
-
-object Testing {
-  // 32-bit int
-  def intToBinary(value: Int): String = {
-    val binary = value.toBinaryString
-    val padding = "0" * (32 - binary.length)
-    padding + binary
-  }
 }

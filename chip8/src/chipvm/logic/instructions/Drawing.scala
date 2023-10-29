@@ -8,14 +8,14 @@ case class ClearScreen() extends Instruction {
     if (vm.isDrawable)
       vm.copy(display = vm.display.clear(), isDrawable = false)
     else
-      vm.copy(pc = vm.pc - UShort(2))
+      vm.copy(pc = vm.pc - InstructionLength)
   }
 }
 
 case class Draw(x: UByte, y: UByte, height: UByte) extends Instruction {
   def execute(vm: ChipVMLogic): ChipVMLogic = {
     if (!vm.isDrawable)
-      vm.copy(pc = vm.pc - UShort(2))
+      vm.copy(pc = vm.pc - InstructionLength)
     else {
       val display = vm.display
       val memory = vm.memory
@@ -43,8 +43,8 @@ case class Draw(x: UByte, y: UByte, height: UByte) extends Instruction {
       }
 
       val newRegisters: Vector[UByte] = registers.updated(VFIndex,
-        if (drawnDisplay.collision) UByte(1)
-        else UByte(0))
+        if (drawnDisplay.collision) UByte.One
+        else UByte.Zero)
       val newDisplay = drawnDisplay.clearCollision()
 
       vm.copy(display = newDisplay,

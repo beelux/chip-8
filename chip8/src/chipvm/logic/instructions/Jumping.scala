@@ -1,5 +1,6 @@
 package chipvm.logic.instructions
 
+import chipvm.logic.ChipVMLogic.InstructionLength
 import chipvm.logic._
 
 /**
@@ -39,7 +40,7 @@ case class CallSubroutine(position: UShort) extends Instruction {
 case class SkipValEqual(index: UByte, value: UByte) extends Instruction {
   def execute(vm: ChipVMLogic): ChipVMLogic = {
     vm.variableRegisters(index.toByte) match {
-      case `value` => vm.copy(pc = vm.pc + UShort(2))
+      case `value` => vm.copy(pc = vm.pc + InstructionLength)
       case _ => vm
     }
   }
@@ -49,7 +50,7 @@ case class SkipValNotEqual(index: UByte, value: UByte) extends Instruction {
   def execute(vm: ChipVMLogic): ChipVMLogic = {
     vm.variableRegisters(index.toByte) match {
       case `value` => vm
-      case _ => vm.copy(pc = vm.pc + UShort(2))
+      case _ => vm.copy(pc = vm.pc + InstructionLength)
     }
   }
 }
@@ -60,7 +61,7 @@ case class SkipRegisterEqual(index1: UByte, index2: UByte) extends Instruction {
     val value2 = vm.variableRegisters(index2.toByte)
 
     if (value1 == value2)
-      vm.copy(pc = vm.pc + UShort(2))
+      vm.copy(pc = vm.pc + InstructionLength)
     else
       vm
   }
@@ -72,7 +73,7 @@ case class SkipRegisterNotEqual(index1: UByte, index2: UByte) extends Instructio
     val value2 = vm.variableRegisters(index2.toByte)
 
     if (value1 != value2)
-      vm.copy(pc = vm.pc + UShort(2))
+      vm.copy(pc = vm.pc + InstructionLength)
     else
       vm
   }

@@ -16,7 +16,7 @@ case class Add(index: UByte, value: UByte) extends Instruction {
     val registers = vm.variableRegisters
 
     val result = (registers(index.toByte) + value).toShort
-    val overflowedResult = UByte(modulo(result, 256))
+    val overflowedResult = UByte(modulo(result, UByte.max.toInt+1))
     val newRegisters = registers.updated(index.toByte, overflowedResult)
     vm.copy(variableRegisters = newRegisters)
   }
