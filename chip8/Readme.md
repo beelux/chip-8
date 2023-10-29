@@ -63,7 +63,8 @@ Many games might still be buggy, but this is because they might depend on specif
 ### Demos
 These are demos that I found online, I did not make them myself, ***nor did I test them extensively.***
 
-
+- `roms/sir.ch8` - Triangle
+- `roms/maze.ch8` - Randomly generated maze
 - `roms/pong.ch8` - Pong
   - `1` for P1 Up
   - `Q` for P1 Down
@@ -77,10 +78,9 @@ These are demos that I found online, I did not make them myself, ***nor did I te
   - `E` for Right
   - `Q` for Rotate
 - `roms/buggy-RoShamBo.ch8` - RoShamBo/RPS
-  - Known bug: Display also is a bit wonky at times. It might rely on quirks or extended behaviours.
+  - Known bug: Display also is a bit wonky: the indicated letters do not actually show that RPS move, and it does not always reset properly. It might rely on quirks or extended behaviours.
   - `Z` for Rock
   - `X` for Paper
   - `C` for Scissors
-- `roms/sir.ch8` - Triangle
 - `roms/war.ch8` - Press F to pay respects
-  - `V` to pay respects 
+  - `V` to pay respects (V is placed on the location of the original keypad's F)
