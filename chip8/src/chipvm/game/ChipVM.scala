@@ -2,8 +2,8 @@
 package chipvm.game
 
 import engine.GameBase
-import engine.graphics.{Color, Point, Rectangle}
-import processing.core.{PApplet, PConstants}
+import engine.graphics.{Point, Rectangle}
+import processing.core.PApplet
 import processing.event.KeyEvent
 import chipvm.logic._
 import chipvm.game.ChipVM._
@@ -23,10 +23,10 @@ class ChipVM extends GameBase {
 
   override def draw(): Unit = {
       if (updateState())
-        drawGrid()
+        drawDisplay()
   }
 
-  def drawGrid(): Unit = {
+  private def drawDisplay(): Unit = {
     setFillColor(ChipVMLogic.BackgroundColor)
     drawRectangle(screenArea)
 
@@ -57,25 +57,27 @@ class ChipVM extends GameBase {
 
   override def setup(): Unit = {
     noStroke() // Disable stroke around rectangle
-    gameLogic = gameLogic.readROM("roms/1-chip8-logo.ch8")
+
+    // Demo roms - Kept in source code as a list
     //gameLogic = gameLogic.readROM("roms/2-ibm-logo-1.ch8")
-    gameLogic = gameLogic.readROM("roms/3-corax+.ch8")
-    gameLogic = gameLogic.readROM("roms/4-flags.ch8")
+    //gameLogic = gameLogic.readROM("roms/3-corax+.ch8")
+    //gameLogic = gameLogic.readROM("roms/4-flags.ch8")
     //gameLogic = gameLogic.readROM("roms/5-quirks.ch8")
-    gameLogic = gameLogic.readROM("roms/RPS.ch8")
     //gameLogic = gameLogic.readROM("roms/6-keypad.ch8")
-    //gameLogic = gameLogic.readROM("roms/sir.ch8")
-    //gameLogic = gameLogic.readROM("roms/morse_demo.ch8")
-    //gameLogic = gameLogic.readROM("roms/war.ch8")
-    //gameLogic = gameLogic.readROM("roms/war.ch8")
-    //gameLogic = gameLogic.readROM("roms/audio.ch8")
+    //gameLogic = gameLogic.readROM("roms/7-fontTest.ch8")
+
+    gameLogic = gameLogic.readROM()
     this.frameRate(ChipVMLogic.InstructionsPerSecond.toFloat)
 
-    drawGrid()
+    drawDisplay()
     updateTimer.init()
   }
 
-  def updateState(): Boolean = {
+  /**
+   * Updates the state of the game
+   * @return if the display was modified and needs to be redrawn
+   */
+  private def updateState(): Boolean = {
     gameLogic = checkTimers()
 
     val instruction = gameLogic.fetchDecode()
@@ -84,7 +86,7 @@ class ChipVM extends GameBase {
     modifiesDisplay(instruction)
   }
 
-  def checkTimers(): ChipVMLogic = {
+  private def checkTimers(): ChipVMLogic = {
     if (updateTimer.timeForTick()) {
       val newLogic = gameLogic.timerTick()
       updateTimer.advanceFrame()

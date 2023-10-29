@@ -1,5 +1,6 @@
 package chipvm.logic.instructions
 
+import chipvm.logic.ChipVMLogic.FontWidth
 import chipvm.logic.{ChipVMLogic, UByte, UShort}
 import chipvm.logic.instructions.Instruction.modulo
 
@@ -98,7 +99,7 @@ case class StoreBCD(index: UByte) extends Instruction {
 
 case class LoadFont(index: UByte) extends Instruction {
   def execute(vm: ChipVMLogic): ChipVMLogic = {
-    val fontAddress = vm.variableRegisters(index.toShort).toInt * 5
+    val fontAddress = vm.variableRegisters(index.toShort).toInt * FontWidth
 
     vm.copy(i = fontAddress)
   }

@@ -2,20 +2,7 @@ package chipvm.logic.instructions
 
 import chipvm.logic.{ChipVMLogic, UByte}
 import chipvm.logic.ChipVMLogic._
-import chipvm.logic.instructions.Instruction.modulo
 import engine.random.ScalaRandomGen
-
-abstract class LogicalOperation(index1: UByte, index2: UByte, operation: (UByte, UByte) => UByte) extends Instruction {
-  def execute(vm: ChipVMLogic): ChipVMLogic = {
-    val value1 = vm.variableRegisters(index1.toByte)
-    val value2 = vm.variableRegisters(index2.toByte)
-
-    val result = operation(value1, value2)
-    val newRegisters = vm.variableRegisters.updated(index1.toByte, result)
-
-    vm.copy(variableRegisters = newRegisters)
-  }
-}
 
 abstract class MathOperation(index1: UByte, index2: UByte,
                              operation: (UByte, UByte) => (UByte, UByte)) extends Instruction {
@@ -37,10 +24,10 @@ case class Xor(index1: UByte, index2: UByte) extends MathOperation(index1, index
 
 case class AddRegister(index1: UByte, index2: UByte) extends MathOperation(index1, index2,
   (value1, value2) => {
-    val result = value1 + value2
-    val overflowableResult = value1.toShort + value2.toShort
-    val overflow: UByte = if (overflowableResult > 255) UByte(1) else UByte(0)
-    (result, overflow)
+    val result = value1 + value2 // UBytes overflow automatically
+    val overflowableResult = value1.toShort + value2.toShort // this result can exceed 255
+    val overflowFlag: UByte = if (overflowableResult > 255) UByte(1) else UByte(0)
+    (result, overflowFlag)
   })
 
 abstract class SubtractOperation(index1: UByte, index2: UByte,
@@ -67,8 +54,6 @@ case class ShiftRight(destination: UByte, source: UByte) extends MathOperation(d
   (_: UByte, value2: UByte) => {
     val result = value2 >> UByte(1)
     val overflowFlag = value2 & UByte(0x1)
-    // set MSB as the overflow value's
-    //val result = (intermediate | (value2 & 0x80)).toShort
     (result, overflowFlag)
   })
 
@@ -76,15 +61,12 @@ case class ShiftLeft(destination: UByte, source: UByte) extends MathOperation(de
   (_: UByte, value2: UByte) => {
     val result = value2 << UByte(1)
     val overflowFlag = (value2 & UByte(0x80)) >> UByte(7)
-    // set LSB as the overflow value
-    // val result = (intermediate | (value2 & 0x1)).toShort
     (result, overflowFlag)
   })
 
 case class Random(index: UByte, mask: UByte) extends Instruction {
   def execute(vm: ChipVMLogic): ChipVMLogic = {
     val generator = new ScalaRandomGen()
-    //generator.setSeed(System.currentTimeMillis())
 
     val random = UByte(generator.randomInt(256))
     val result = random & mask
