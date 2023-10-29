@@ -11,8 +11,8 @@ import scala.io.Source
 
 case class ChipVMLogic(memory: Vector[UByte], // 4 kilobytes (using Bytes) - using Short because of signedness of Byte
                   display: Display, // 64x32 display
-                  pc: Int, // 12-bit (max 4096)
-                  i: Int, // index register
+                  pc: UShort, // 12-bit (max 4096)
+                  i: UShort, // index register
                   stack: List[UShort], // stack of 16-bit addresses
                   delayTimer: UByte, // 8-bit timer, decreased at 60 times per second
                   soundTimer: UByte, // same, but BEEP as long as not 0
@@ -26,11 +26,11 @@ case class ChipVMLogic(memory: Vector[UByte], // 4 kilobytes (using Bytes) - usi
   // |    Fetch, Decode, Execute    |
   // --------------------------------
   def fetchDecode(): Instruction = {
-    val instruction = (memory(pc), memory(pc + 1))
-    val nibbles = (((memory(pc) & UByte(0xF0)) >> UByte(4)),
-                   (memory(pc) & UByte(0x0F)),
-                   ((memory(pc + 1) & UByte(0xF0)) >> UByte(4)),
-                   (memory(pc + 1) & UByte(0x0F)))
+    val instruction = (memory(pc.toShort), memory(pc.toShort + 1))
+    val nibbles = (((memory(pc.toShort) & UByte(0xF0)) >> UByte(4)),
+                   (memory(pc.toShort) & UByte(0x0F)),
+                   ((memory(pc.toShort + 1) & UByte(0xF0)) >> UByte(4)),
+                   (memory(pc.toShort + 1) & UByte(0x0F)))
     // Generic Data
     lazy val _X__ = nibbles._2
     lazy val __Y_ = nibbles._3
@@ -92,7 +92,7 @@ case class ChipVMLogic(memory: Vector[UByte], // 4 kilobytes (using Bytes) - usi
   }
 
   def execute(instruction: Instruction): ChipVMLogic = {
-    val modifiedPC = copy(pc = pc + 2)
+    val modifiedPC = copy(pc = pc + UShort(2))
     instruction.execute(modifiedPC)
   }
 
@@ -151,8 +151,8 @@ case class ChipVMLogic(memory: Vector[UByte], // 4 kilobytes (using Bytes) - usi
     val cleanedRegisters = variableRegisters.map(_ => UByte(0))
 
     copy(memory = cleanMemory.toVector,
-      pc = 512,
-      i = 0,
+      pc = UShort(512),
+      i = UShort(0),
       variableRegisters = cleanedRegisters,
       waitForKeyIndex = None,
       isDrawable = true,
@@ -298,8 +298,8 @@ object ChipVMLogic {
   def apply() = new ChipVMLogic(
     memory = new Array[UByte](4096).toVector,
     display = Display(),
-    pc = 512,
-    i = 0,
+    pc = UShort(512),
+    i = UShort(0),
     stack = List[UShort](),
     delayTimer = UByte(0),
     soundTimer = UByte(0),

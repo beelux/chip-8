@@ -101,6 +101,7 @@ case class UShort(value: Short) {
   }
 
   def toInt: Int = value & 0xFFFF
+  def toShort: Short = toInt.toShort
   def toByte: Byte = toInt.toByte
   def toUByte: UByte = UByte(toByte)
   override def toString: String = toInt.toString

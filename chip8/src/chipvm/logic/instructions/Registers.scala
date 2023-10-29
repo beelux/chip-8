@@ -34,42 +34,32 @@ case class Copy(destination: UByte, source: UByte) extends Instruction {
 
 case class SetIndex(value: UShort) extends Instruction {
   def execute(vm: ChipVMLogic): ChipVMLogic =
-    vm.copy(i = value.toInt)
+    vm.copy(i = value)
 }
 
-case class StoreMemory(index: UByte, address: Int) extends Instruction {
+case class StoreMemory(index: UByte, address: UShort) extends Instruction {
   def execute(vm: ChipVMLogic): ChipVMLogic = {
     val newMemory = (0 to index.toByte).foldLeft(vm.memory)(
       (acc, index: Int) => {
-        acc.updated(vm.i + index, vm.variableRegisters(index))
+        acc.updated(vm.i.toShort + index, vm.variableRegisters(index))
       }
     )
 
-    val newI = {
-      vm.quirks.getOrElse("memoryQuirk", false) match {
-        case true => vm.i + index.toShort + 1
-        case false => vm.i
-      }
-    }
+    val newI = Memory.getIafterMemoryOperation(vm, index)
 
     vm.copy(memory = newMemory, i = newI)
   }
 }
 
-case class LoadMemory(index: UByte, address: Int) extends Instruction {
+case class LoadMemory(index: UByte, address: UShort) extends Instruction {
   def execute(vm: ChipVMLogic): ChipVMLogic = {
     val newRegisters = (0 to index.toByte).foldLeft(vm.variableRegisters)(
       (acc, index: Int) => {
-        acc.updated(index, vm.memory(vm.i + index))
+        acc.updated(index, vm.memory(vm.i.toShort + index))
       }
     )
 
-    val newI = {
-      vm.quirks.getOrElse("memoryQuirk", false) match {
-        case true => vm.i + index.toShort + 1
-        case false => vm.i
-      }
-    }
+    val newI = Memory.getIafterMemoryOperation(vm, index)
 
     vm.copy(variableRegisters = newRegisters, i = newI)
   }
@@ -77,7 +67,7 @@ case class LoadMemory(index: UByte, address: Int) extends Instruction {
 
 case class AddToIndex(index: UByte) extends Instruction {
   def execute(vm: ChipVMLogic): ChipVMLogic = {
-    val newI = vm.i + vm.variableRegisters(index.toShort).toShort
+    val newI = vm.i + vm.variableRegisters(index.toShort).toUShort
     vm.copy(i = newI)
   }
 }
@@ -89,9 +79,9 @@ case class StoreBCD(index: UByte) extends Instruction {
     val _x_ = UByte((value % 100) / 10)
     val __x = UByte(value % 10)
 
-    val newMemory : Vector[UByte] = vm.memory.updated(vm.i,     x__)
-                                            .updated(vm.i + 1, _x_)
-                                            .updated(vm.i + 2, __x)
+    val newMemory : Vector[UByte] = vm.memory.updated(vm.i.toShort,     x__)
+                                             .updated(vm.i.toShort + 1, _x_)
+                                             .updated(vm.i.toShort + 2, __x)
 
     vm.copy(memory = newMemory)
   }
@@ -101,6 +91,15 @@ case class LoadFont(index: UByte) extends Instruction {
   def execute(vm: ChipVMLogic): ChipVMLogic = {
     val fontAddress = vm.variableRegisters(index.toShort).toInt * FontWidth
 
-    vm.copy(i = fontAddress)
+    vm.copy(i = UShort(fontAddress))
+  }
+}
+
+object Memory {
+  def getIafterMemoryOperation(vm: ChipVMLogic, index: UByte): UShort = {
+      vm.quirks.getOrElse("memoryQuirk", false) match {
+        case true => vm.i + index.toUShort + UShort(1)
+        case false => vm.i
+      }
   }
 }
