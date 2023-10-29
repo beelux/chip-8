@@ -5,10 +5,9 @@ import engine.GameBase
 import engine.graphics.{Point, Rectangle}
 import processing.core.PApplet
 import processing.event.KeyEvent
-import chipvm.logic._
+import chipvm.logic.{ChipVMLogic, Point => GridPoint, _}
 import chipvm.game.ChipVM._
 import chipvm.logic.instructions.Instruction._
-import chipvm.logic.{Point => GridPoint}
 
 class ChipVM extends GameBase {
   var gameLogic : ChipVMLogic = ChipVMLogic()
@@ -24,6 +23,29 @@ class ChipVM extends GameBase {
   override def draw(): Unit = {
       if (updateState())
         drawDisplay()
+  }
+
+  /**
+   * Updates the state of the game
+   *
+   * @return if the display was modified and needs to be redrawn
+   */
+  private def updateState(): Boolean = {
+    gameLogic = checkTimers()
+
+    val instruction = gameLogic.fetchDecode()
+    gameLogic = gameLogic.execute(instruction)
+
+    modifiesDisplay(instruction)
+  }
+
+  private def checkTimers(): ChipVMLogic = {
+    if (updateTimer.timeForTick()) {
+      val newLogic = gameLogic.timerTick()
+      updateTimer.advanceFrame()
+
+      newLogic
+    } else gameLogic
   }
 
   private def drawDisplay(): Unit = {
@@ -50,11 +72,6 @@ class ChipVM extends GameBase {
     gameLogic = gameLogic.keyReleased(event.getKeyCode)
   }
 
-  override def settings(): Unit = {
-    pixelDensity(displayDensity())
-    size(widthInPixels, heightInPixels)
-  }
-
   override def setup(): Unit = {
     noStroke() // Disable stroke around rectangle
 
@@ -73,26 +90,9 @@ class ChipVM extends GameBase {
     updateTimer.init()
   }
 
-  /**
-   * Updates the state of the game
-   * @return if the display was modified and needs to be redrawn
-   */
-  private def updateState(): Boolean = {
-    gameLogic = checkTimers()
-
-    val instruction = gameLogic.fetchDecode()
-    gameLogic = gameLogic.execute(instruction)
-
-    modifiesDisplay(instruction)
-  }
-
-  private def checkTimers(): ChipVMLogic = {
-    if (updateTimer.timeForTick()) {
-      val newLogic = gameLogic.timerTick()
-      updateTimer.advanceFrame()
-
-      newLogic
-    } else gameLogic
+  override def settings(): Unit = {
+    pixelDensity(displayDensity())
+    size(widthInPixels, heightInPixels)
   }
 }
 

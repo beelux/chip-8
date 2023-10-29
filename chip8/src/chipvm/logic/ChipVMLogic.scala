@@ -22,145 +22,9 @@ case class ChipVMLogic(memory: Vector[UByte], // 4 kilobytes (using Bytes) - usi
                   isDrawable: Boolean, // Drawing is only allowed 60 times per second
                   quirks: Map[String,Boolean] // Quirks for the ChipVM
                   ) {
-  def timerTick(): ChipVMLogic = {
-    val newDelayTimer = if (delayTimer == 0) UByte(0) else delayTimer - UByte(1)
-    val newSoundTimer = if (soundTimer == 0) UByte(0) else soundTimer - UByte(1)
-
-    copy(delayTimer = newDelayTimer,
-         soundTimer = newSoundTimer,
-         isDrawable = true)
-  }
-
-  def getIndexFromKeyCode(keyCode: Int): Option[Int] = {
-    val value = keyCode match {
-      case VK_1 => 0x1
-      case VK_2 => 0x2
-      case VK_3 => 0x3
-      case VK_4 => 0xC
-      case VK_Q => 0x4
-      case VK_W => 0x5
-      case VK_E => 0x6
-      case VK_R => 0xD
-      case VK_A => 0x7
-      case VK_S => 0x8
-      case VK_D => 0x9
-      case VK_F => 0xE
-      case VK_Z => 0xA
-      case VK_X => 0x0
-      case VK_C => 0xB
-      case VK_V => 0xF
-      case _ => 0xBAD // This way, not all values must be surrounded by Some()
-    }
-
-    if (value == 0xBAD) None
-    else Some(value)
-  }
-
-  private def keyAction(keyCode: Int, state: Boolean) = {
-    val index = getIndexFromKeyCode(keyCode)
-
-    if (index.isDefined) {
-      val updatedKeys = pressedKeys.updated(index.get, state)
-      copy(pressedKeys = updatedKeys)
-    } else this
-  }
-
-  def keyPressed(keyCode: Int): ChipVMLogic =
-    keyAction(keyCode, state = true)
-  def keyReleased(keyCode: Int): ChipVMLogic =
-    keyAction(keyCode, state = false)
-
-  /**
-   * Reads the ROM path from the properties file and loads the ROM
-   * @return ChipVMLogic w/ ROM loaded + initialized
-   */
-  def readROM(): ChipVMLogic = {
-    val properties = readPropertiesFromDisk
-
-    val filePath: String = {
-      if (properties.getProperty("romPath") != null && properties.getProperty("romPath").trim.nonEmpty)
-        properties.getProperty("romPath")
-      else
-        throw new RuntimeException("No ROM path specified")
-    }
-
-    readROM(filePath)
-  }
-
-  /**
-   * Load a ROM from disk
-   * @param inputPath ROM Path
-   * @return ChipVMLogic w/ ROM loaded + initialized
-   */
-  def readROM(filePath: String): ChipVMLogic = {
-    val properties = readPropertiesFromDisk
-
-    val cleanMemory = new Array[UByte](4096).map(_ => UByte(0))
-
-    val file = Source.fromFile(filePath, "ISO8859-1")
-    file.map(UByte(_)).copyToArray(cleanMemory, 512, 3584)
-    file.close()
-
-    font.flatten.map(UByte(_)).copyToArray(cleanMemory, 0, 512)
-
-    val cleanedRegisters = variableRegisters.map(_ => UByte(0))
-
-    copy(memory = cleanMemory.toVector,
-      pc = 512,
-      i = 0,
-      variableRegisters = cleanedRegisters,
-      waitForKeyIndex = None,
-      isDrawable = true,
-      display = Display(),
-      stack = List[UShort](),
-      soundTimer = UByte(0),
-      delayTimer = UByte(0),
-      quirks = parseProperties(properties))
-  }
-
-  def parseProperties(properties: Properties): Map[String, Boolean] = {
-    val javaKeys = properties.keySet()
-    val keys = javaKeys.toArray.map(_.toString)
-    val emptyMap = Map[String, Boolean]()
-
-    keys.foldLeft(emptyMap)((acc, key) => {
-      val value = properties.getProperty(key).toBooleanOption
-      if (value.isDefined)
-        acc + (key -> value.get)
-      else
-        acc
-    })
-  }
-
-  def readPropertiesFromDisk: Properties = {
-    try {
-      val quirks = new Properties
-      val quirksFile = new java.io.FileInputStream("quirks.properties")
-      quirks.load(quirksFile)
-      quirksFile.close()
-      quirks
-    } catch {
-      case unableToLoadFile: Exception => initializeDefaultProperties
-    }
-  }
-
-  /**
-   * Generated the default properties file.
-   * Hardcoded values are used to initialize the file.
-   * @return
-   */
-  def initializeDefaultProperties: Properties = {
-    val quirks = new Properties()
-    quirks.setProperty("memoryQuirk", "true") // https://tobiasvl.github.io/blog/write-a-chip-8-emulator/#fx55-and-fx65-store-and-load-memory
-    quirks.setProperty("romPath", "roms/3-corax+.ch8") // Good demo ROM
-
-    val quirksFile = new java.io.FileOutputStream("quirks.properties")
-    quirks.store(quirksFile, "Quirks for ChipVM")
-    quirksFile.close()
-
-    quirks
-  }
-
+  // --------------------------------
+  // |    Fetch, Decode, Execute    |
+  // --------------------------------
   def fetchDecode(): Instruction = {
     val instruction = (memory(pc), memory(pc + 1))
     val nibbles = (((memory(pc) & UByte(0xF0)) >> UByte(4)),
@@ -231,6 +95,168 @@ case class ChipVMLogic(memory: Vector[UByte], // 4 kilobytes (using Bytes) - usi
     val modifiedPC = copy(pc = pc + 2)
     instruction.execute(modifiedPC)
   }
+
+  // --------------------------
+  // |         Timers         |
+  // --------------------------
+
+  def timerTick(): ChipVMLogic = {
+    val newDelayTimer = if (delayTimer == 0) UByte(0) else delayTimer - UByte(1)
+    val newSoundTimer = if (soundTimer == 0) UByte(0) else soundTimer - UByte(1)
+
+    copy(delayTimer = newDelayTimer,
+      soundTimer = newSoundTimer,
+      isDrawable = true)
+  }
+
+  // --------------------------
+  // |        Read ROM        |
+  // --------------------------
+
+  /**
+   * Reads the ROM path from the properties file and loads the ROM
+   *
+   * @return ChipVMLogic w/ ROM loaded + initialized
+   */
+  def readROM(): ChipVMLogic = {
+    val properties = readPropertiesFromDisk
+
+    val filePath: String = {
+      if (properties.getProperty("romPath") != null && properties.getProperty("romPath").trim.nonEmpty)
+        properties.getProperty("romPath")
+      else
+        throw new RuntimeException("No ROM path specified")
+    }
+
+    readROM(filePath)
+  }
+
+  /**
+   * Load a ROM from disk
+   *
+   * @param inputPath ROM Path
+   * @return ChipVMLogic w/ ROM loaded + initialized
+   */
+  def readROM(filePath: String): ChipVMLogic = {
+    val properties = readPropertiesFromDisk
+
+    val cleanMemory = new Array[UByte](4096).map(_ => UByte(0))
+
+    val file = Source.fromFile(filePath, "ISO8859-1")
+    file.map(UByte(_)).copyToArray(cleanMemory, 512, 3584)
+    file.close()
+
+    font.flatten.map(UByte(_)).copyToArray(cleanMemory, 0, 512)
+
+    val cleanedRegisters = variableRegisters.map(_ => UByte(0))
+
+    copy(memory = cleanMemory.toVector,
+      pc = 512,
+      i = 0,
+      variableRegisters = cleanedRegisters,
+      waitForKeyIndex = None,
+      isDrawable = true,
+      display = Display(),
+      stack = List[UShort](),
+      soundTimer = UByte(0),
+      delayTimer = UByte(0),
+      quirks = parseProperties(properties))
+  }
+
+  // --------------------------
+  // |       Properties       |
+  // --------------------------
+  def parseProperties(properties: Properties): Map[String, Boolean] = {
+    val javaKeys = properties.keySet()
+    val keys = javaKeys.toArray.map(_.toString)
+    val emptyMap = Map[String, Boolean]()
+
+    keys.foldLeft(emptyMap)((acc, key) => {
+      val value = properties.getProperty(key).toBooleanOption
+      if (value.isDefined)
+        acc + (key -> value.get)
+      else
+        acc
+    })
+  }
+
+  def readPropertiesFromDisk: Properties = {
+    try {
+      val quirks = new Properties
+      val quirksFile = new java.io.FileInputStream("quirks.properties")
+      quirks.load(quirksFile)
+      quirksFile.close()
+      quirks
+    } catch {
+      case unableToLoadFile: Exception => initializeDefaultProperties
+    }
+  }
+
+  /**
+   * Generated the default properties file.
+   * Hardcoded values are used to initialize the file.
+   *
+   * @return
+   */
+  def initializeDefaultProperties: Properties = {
+    val quirks = new Properties()
+    quirks.setProperty("memoryQuirk", "true") // https://tobiasvl.github.io/blog/write-a-chip-8-emulator/#fx55-and-fx65-store-and-load-memory
+    quirks.setProperty("romPath", "roms/3-corax+.ch8") // Good demo ROM
+
+    val quirksFile = new java.io.FileOutputStream("quirks.properties")
+    quirks.store(quirksFile, "Quirks for ChipVM")
+    quirksFile.close()
+
+    quirks
+  }
+
+  // --------------------------
+  // |        Keyboard        |
+  // --------------------------
+  def getIndexFromKeyCode(keyCode: Int): Option[Int] = {
+    val value = keyCode match {
+      case VK_1 => 0x1
+      case VK_2 => 0x2
+      case VK_3 => 0x3
+      case VK_4 => 0xC
+      case VK_Q => 0x4
+      case VK_W => 0x5
+      case VK_E => 0x6
+      case VK_R => 0xD
+      case VK_A => 0x7
+      case VK_S => 0x8
+      case VK_D => 0x9
+      case VK_F => 0xE
+      case VK_Z => 0xA
+      case VK_X => 0x0
+      case VK_C => 0xB
+      case VK_V => 0xF
+      case _ => 0xBAD // This way, not all values must be surrounded by Some()
+    }
+
+    if (value == 0xBAD) None
+    else Some(value)
+  }
+
+  private def keyAction(keyCode: Int, state: Boolean) = {
+    val index = getIndexFromKeyCode(keyCode)
+
+    state match {
+      case true => print("Pressed")
+      case false => print("Released")
+    }
+
+    if (index.isDefined) {
+      val updatedKeys = pressedKeys.updated(index.get, state)
+      copy(pressedKeys = updatedKeys)
+    } else this
+  }
+
+  def keyPressed(keyCode: Int): ChipVMLogic =
+    keyAction(keyCode, state = true)
+
+  def keyReleased(keyCode: Int): ChipVMLogic =
+    keyAction(keyCode, state = false)
 }
 
 object ChipVMLogic {
