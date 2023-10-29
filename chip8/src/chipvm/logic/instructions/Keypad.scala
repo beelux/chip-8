@@ -1,6 +1,6 @@
 package chipvm.logic.instructions
 
-import chipvm.logic.{ChipVMLogic, UByte, UShort}
+import chipvm.logic.{ChipVMLogic, UByte}
 
 abstract class SkipKey(index: UByte, skipValue: Boolean) extends Instruction {
   def execute(vm: ChipVMLogic): ChipVMLogic = {
@@ -28,7 +28,7 @@ case class WaitForKey(index: UByte) extends Instruction {
 
       firstKeyPressed match {
         case -1 => vm.copy(pc = vm.pc - 2)
-        case key => vm.copy(waitForKeyIndex = Some(key))
+        case key => vm.copy(pc = vm.pc - 2, waitForKeyIndex = Some(key))
       }
     } else {
       val key = vm.waitForKeyIndex.get
