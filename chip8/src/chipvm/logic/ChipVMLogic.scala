@@ -241,11 +241,6 @@ case class ChipVMLogic(memory: Vector[UByte], // 4 kilobytes (using Bytes) - usi
   private def keyAction(keyCode: Int, state: Boolean) = {
     val index = getIndexFromKeyCode(keyCode)
 
-    state match {
-      case true => print("Pressed")
-      case false => print("Released")
-    }
-
     if (index.isDefined) {
       val updatedKeys = pressedKeys.updated(index.get, state)
       copy(pressedKeys = updatedKeys)
