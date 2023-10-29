@@ -24,6 +24,8 @@ I implemented CHIP-8 as correctly and extensively as I could, yet limitations ar
 - Some roms are buggy (e.g. RPS), but they work well enough to demonstrate the interpreter's full functionality.
   - RPS has a bug where dual input might happen, I fear this might have to do with Processing and Java's AWT.
 
+Note that there was a best effort to make the interpreter immutable.
+
 ## Usage
 ### Run the interpreter
 1. Update the `gradle.properties` file
