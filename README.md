@@ -1,32 +1,15 @@
-# CHIP-8 Interpreter - Trix
+# CHIP-8 Interpreter
 
 ![CHIP-8 Testing suite Logo](resources/chip8.png)
 
 ## Introduction
-The freedom given to us for the bonus assignment might be freeing for some, but others might find it difficult to choose a project of appropriate size for the limited time.
-The addition of creativity with the restriction of having to use Processing and Minim really made me worry about the feasibility of any bonus I'd do.
-
-This is where CHIP-8 plays a role. As one of the listed suggestions on the Canvas page, it is similar to COPP's IJVM, and creative and visual enough for the bonus assignment.
+A **CHIP-8 interpreter** written in Scala, using the Processing library for graphics.
 
 Some context on CHIP-8:
 
 > CHIP-8 is a simple, interpreted, programming language which was first used on some do-it-yourself computer systems in the late 1970s and early 1980s. The COSMAC VIP, DREAM 6800, and ETI 660 computers are a few examples. These computers typically were designed to use a television as a display, had between 1 and 4K of RAM, and used a 16-key hexadecimal keypad for input. The interpreter took up only 512 bytes of memory, and programs, which were entered into the computer in hexadecimal, were even smaller.
 >
 > (http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#1.0)
-
-## Process and Notes
-
-I implemented CHIP-8 as correctly and extensively as I could, yet limitations are still present:
-- All test roms work
-  - `5-quirks.ch8`: the display being "low" is the only complaint, but seemingly it is not a bug. 
-- *Trying* to use Minim for sound was a horrible experience, and I was forced to remove it from my interpreter as I feared it would make it crash in unexpected ways.
-  - It bugged out saying files did not exist when they did
-  - The Oscillator (for custom square wave generation) was not working as well as needed: it did not turn on and off quirkly enough
-    - at times, it slowed down the program to a crawl 
-- Some roms are buggy (e.g. RPS), but they work well enough to demonstrate the interpreter's full functionality.
-  - RPS has a bug where dual input might happen, I fear this might have to do with Processing and Java's AWT.
-
-Note that there was **a best effort to make the interpreter immutable**.
 
 ## Usage
 ### Run the interpreter
@@ -40,7 +23,7 @@ Note that there was **a best effort to make the interpreter immutable**.
    - by default, it is set to `roms/3-corax+.ch8`, which is an extensive test rom
 3. Run the `run` gradle task, or, as in Tetris, click on the green "play button" in `ChipVM.scala` inside of IntelliJ
 
-I based my implementation mostly on the testing ROMs, the demo roms were not tested much and might be (very) buggy.
+I based my implementation mostly on the testing ROMs, the demo (games, etc.) roms were not tested much.
 
 ### Controls
 The keypad is mapped to the following keys:
@@ -112,3 +95,17 @@ This interpreter passes pretty much all tests across corax+, flags, quirks and k
 
 ### `6-keypad.ch8`
 ![Keypad](resources/keypad.png)
+
+## Process and Notes
+
+I implemented CHIP-8 as correctly and extensively as I could, yet limitations are still present:
+- All test roms work
+  - `5-quirks.ch8`: the display being "low" is the only complaint, but seemingly it is not a bug. 
+- *Trying* to use Minim for sound was a horrible experience, and I was forced to remove it from my interpreter as I feared it would make it crash in unexpected ways.
+  - It bugged out saying files did not exist when they did
+  - The Oscillator (for custom square wave generation) was not working as well as needed: it did not turn on and off quirkly enough
+    - at times, it slowed down the program to a crawl 
+- Some roms are buggy (e.g. RPS), but they work well enough to demonstrate the interpreter's full functionality.
+  - RPS has a bug where dual input might happen, I fear this might have to do with Processing and Java's AWT.
+
+Note that there was **a best effort to make the interpreter immutable**.
